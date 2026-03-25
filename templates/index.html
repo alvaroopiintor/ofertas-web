@@ -1,167 +1,882 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔥 Chollos Amazon</title>
+    
+    <!-- SEO Primario -->
+    <title>SPAIN LINKS 🔥 Ofertas Amazon - Descuentos en Tiempo Real</title>
+    <meta name="description" content="Encuentra las mejores ofertas de Amazon actualizadas en tiempo real. Descuentos exclusivos en tecnología, hogar, moda y más. ¡Ahorra hoy con SPAIN LINKS!">
+    <meta name="keywords" content="ofertas amazon, descuentos, chollos, tecnología, hogar, moda, España, deals, promo, amazon españa">
+    <meta name="author" content="SPAIN LINKS">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#f97316">
+    <link rel="canonical" href="https://spainlinks.com/">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://spainlinks.com/">
+    <meta property="og:title" content="SPAIN LINKS 🔥 Ofertas Amazon">
+    <meta property="og:description" content="Ofertas seleccionadas automáticamente en tiempo real. ¡No te pierdas los mejores chollos!">
+    <meta property="og:image" content="https://spainlinks.com/og-image.png">
+    <meta property="og:locale" content="es_ES">
+    <meta property="og:site_name" content="SPAIN LINKS">
+
+    <!-- Twitter Cards -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://spainlinks.com/">
+    <meta property="twitter:title" content="SPAIN LINKS 🔥 Ofertas Amazon">
+    <meta property="twitter:description" content="Ofertas seleccionadas automáticamente en tiempo real.">
+    <meta property="twitter:image" content="https://spainlinks.com/twitter-image.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="favicon.png">
+    
+    <!-- Tailwind CSS (Nota: para producción real, compilar con PostCSS) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- DOMPurify para sanitización XSS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.8/purify.min.js" integrity="sha512-1k1X8fU9WHeCgUQaOvCQ7dGZq7sVvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvKvK......" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-            margin: 0;
-            padding: 0;
+        /* Critical CSS inline para carga rápida */
+        :root {
+            --primary: #f97316;
+            --primary-dark: #ea580c;
         }
-
-        .header {
-            background: #232f3e;
+        
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        
+        .skeleton { 
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); 
+            background-size: 200% 100%; 
+            animation: loading 1.5s infinite; 
+        }
+        .dark .skeleton { 
+            background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%); 
+        }
+        @keyframes loading { 
+            0% { background-position: 200% 0; } 
+            100% { background-position: -200% 0; } 
+        }
+        
+        .toast { transform: translateX(100%); opacity: 0; transition: all 0.3s ease-in-out; }
+        .toast.show { transform: translateX(0); opacity: 1; }
+        
+        .spinner { 
+            border: 3px solid #f3f3f3; 
+            border-top: 3px solid #f97316; 
+            border-radius: 50%; 
+            width: 40px; 
+            height: 40px; 
+            animation: spin 1s linear infinite; 
+        }
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+        
+        .nav-item.active { background: #f97316; color: white; }
+        .hidden-section { display: none; }
+        .active-section { display: block; }
+        
+        .discount-badge { animation: pulse-badge 2s infinite; }
+        @keyframes pulse-badge { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        
+        .product-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        
+        /* Focus visible para accesibilidad */
+        :focus-visible { outline: 2px solid #f97316; outline-offset: 2px; }
+        
+        /* Skip link para accesibilidad */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #f97316;
             color: white;
-            text-align: center;
-            padding: 20px;
+            padding: 8px 16px;
+            z-index: 100;
+            transition: top 0.3s;
         }
-
-        .header h1 {
-            margin: 0;
-        }
-
-        .filtros {
-            text-align: center;
-            padding: 15px 0;
-            background: #fff;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .filtros button {
-            margin: 5px;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            background: #ffa41c;
-            color: #fff;
-            font-weight: bold;
-            transition: 0.2s;
-        }
-
-        .filtros button:hover {
-            background: #ff8f00;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 20px;
-            padding: 20px;
-        }
-
-        .card {
-            background: #fff;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            transition: 0.3s;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-        }
-
-        .card img {
-            width: 100%;
-            object-fit: contain;
-            max-height: 200px;
-            background: #f9f9f9;
-        }
-
-        .card-content {
-            padding: 15px;
-            flex-grow: 1;
-        }
-
-        .card-content h3 {
-            font-size: 16px;
-            margin: 0 0 10px;
-            height: 40px;
-            overflow: hidden;
-        }
-
-        .card-content p {
-            margin: 0 0 10px;
-            font-weight: bold;
-            color: #b12704;
-        }
-
-        .card-content a {
-            background: #ffa41c;
-            color: white;
-            padding: 10px;
-            text-align: center;
-            display: block;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: bold;
-            transition: 0.2s;
-        }
-
-        .card-content a:hover {
-            background: #ff8f00;
-        }
-
-        @media (max-width: 600px) {
-            .grid {
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-                gap: 15px;
-                padding: 15px;
-            }
+        .skip-link:focus { top: 0; }
+        
+        /* Dark mode smooth transition */
+        .dark-mode-transition, .dark-mode-transition * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
     </style>
+    
+    <!-- JSON-LD Schema -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "SPAIN LINKS",
+        "url": "https://spainlinks.com/",
+        "description": "Ofertas de Amazon actualizadas en tiempo real",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://spainlinks.com/#/search?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
 </head>
-<body>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col dark-mode-transition">
 
-    <div class="header">
-        <h1>🔥 Mejores Ofertas Amazon</h1>
+    <!-- Skip Link para Accesibilidad -->
+    <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+
+    <!-- DEBUG BAR -->
+    <div class="bg-slate-800 text-white px-4 py-2 text-xs flex items-center justify-between flex-wrap gap-2" role="region" aria-label="Barra de estado">
+        <div class="flex items-center gap-4 flex-wrap">
+            <span class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-green-500" id="api-status" aria-hidden="true"></span>
+                <span id="api-status-text">API Online</span>
+            </span>
+            <span id="last-update" class="text-slate-400">--:--:--</span>
+            <span id="products-count" class="text-orange-400 font-medium">0 productos</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="app.cargar()" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded transition flex items-center gap-1" aria-label="Refrescar ofertas">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                Refresh
+            </button>
+            <button onclick="app.toggleDebug()" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded transition" aria-label="Abrir consola de debug">🐛 Debug</button>
+            <button onclick="app.toggleDarkMode()" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded transition" aria-label="Cambiar modo oscuro">
+                <span class="dark:hidden">🌙</span>
+                <span class="hidden dark:inline">☀️</span>
+            </button>
+            <button onclick="app.clearCache()" class="px-3 py-1 bg-red-600 hover:bg-red-500 rounded transition" aria-label="Limpiar caché">🗑️ Cache</button>
+        </div>
     </div>
 
-    <div class="filtros">
-        <button onclick="cargar()">Todas</button>
-        <button onclick="cargar('zapatillas')">Zapatillas</button>
-        <button onclick="cargar('tecnologia')">Tecnología</button>
-        <button onclick="cargar('hogar')">Hogar</button>
+    <!-- HEADER -->
+    <header class="bg-white dark:bg-slate-800 sticky top-0 z-50 shadow-lg border-b border-slate-200 dark:border-slate-700" role="banner">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <a href="#/home" class="flex items-center gap-3" aria-label="SPAIN LINKS - Ir al inicio">
+                    <img src="logo.png" alt="SPAIN LINKS Logo" class="h-14 w-14 object-contain rounded-xl shadow-md" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                    <svg class="h-14 w-14 hidden" viewBox="0 0 100 100" aria-hidden="true">
+                        <rect fill="#f97316" width="100" height="100" rx="20"/>
+                        <text x="50" y="70" font-size="60" text-anchor="middle" fill="white" font-weight="bold">🔥</text>
+                    </svg>
+                    <div>
+                        <h1 class="text-2xl font-extrabold">SPAIN <span class="text-orange-500">LINKS</span></h1>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">🔥 Ofertas Amazon en tiempo real</p>
+                    </div>
+                </a>
+                <div class="relative w-full md:w-96">
+                    <label for="busqueda" class="sr-only">Buscar productos</label>
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" aria-hidden="true">
+                        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <input type="text" id="busqueda" placeholder="Buscar producto..." autocomplete="off"
+                        class="w-full pl-10 pr-3 py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
+                        aria-label="Buscar productos">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- NAVIGATION -->
+    <nav class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-[100px] z-40" role="navigation" aria-label="Navegación principal">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex items-center justify-between py-3 overflow-x-auto">
+                <div class="flex items-center gap-2" role="tablist">
+                    <button onclick="app.navigate('home')" class="nav-item active px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap" role="tab" aria-selected="true" aria-controls="section-home">🏠 Inicio</button>
+                    <button onclick="app.navigate('tecnologia')" class="nav-item px-4 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition whitespace-nowrap" role="tab" aria-selected="false" aria-controls="section-tecnologia">💻 Tecnología</button>
+                    <button onclick="app.navigate('hogar')" class="nav-item px-4 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition whitespace-nowrap" role="tab" aria-selected="false" aria-controls="section-hogar">🏠 Hogar</button>
+                    <button onclick="app.navigate('moda')" class="nav-item px-4 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition whitespace-nowrap" role="tab" aria-selected="false" aria-controls="section-moda">👗 Moda</button>
+                    <button onclick="app.navigate('blog')" class="nav-item px-4 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition whitespace-nowrap" role="tab" aria-selected="false" aria-controls="section-blog">📝 Blog</button>
+                </div>
+                <div>
+                    <label for="orden" class="sr-only">Ordenar productos</label>
+                    <select id="orden" onchange="app.filtrar()" class="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-orange-500" aria-label="Ordenar productos">
+                        <option value="">Ordenar por</option>
+                        <option value="precio_asc">Precio ↑</option>
+                        <option value="precio_desc">Precio ↓</option>
+                        <option value="descuento">Mayor Descuento %</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main id="main-content" class="flex-grow max-w-7xl mx-auto px-4 py-8 w-full" role="main">
+        
+        <!-- HOME SECTION -->
+        <section id="section-home" class="active-section" role="tabpanel" aria-labelledby="tab-home">
+            <div class="flex justify-between items-center mb-6 flex-wrap gap-2">
+                <h2 class="text-lg font-bold flex items-center gap-2">
+                    <svg class="text-orange-500 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    Todas las Ofertas
+                </h2>
+                <span id="contador" class="text-sm text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700" aria-live="polite">--</span>
+            </div>
+            <div id="productos" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" role="list" aria-label="Lista de productos"></div>
+            <div id="loading" class="hidden flex justify-center mt-8" aria-live="polite"><div class="spinner"></div></div>
+            <div id="load-more-container" class="flex justify-center mt-8">
+                <button id="load-more-btn" onclick="app.loadMore()" class="hidden px-8 py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 transition flex items-center gap-2 shadow-lg" aria-label="Cargar más productos">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    Cargar Más
+                </button>
+            </div>
+        </section>
+
+        <!-- TECNOLOGIA SECTION -->
+        <section id="section-tecnologia" class="hidden-section" role="tabpanel" aria-labelledby="tab-tecnologia">
+            <div class="flex justify-between items-center mb-6 flex-wrap gap-2">
+                <h2 class="text-lg font-bold flex items-center gap-2">
+                    <svg class="text-orange-500 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    Tecnología
+                </h2>
+                <span id="contador-tecnologia" class="text-sm text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700" aria-live="polite">--</span>
+            </div>
+            <div id="productos-tecnologia" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" role="list"></div>
+            <div id="loading-tecnologia" class="hidden flex justify-center mt-8" aria-live="polite"><div class="spinner"></div></div>
+        </section>
+
+        <!-- HOGAR SECTION -->
+        <section id="section-hogar" class="hidden-section" role="tabpanel">
+            <div class="flex justify-between items-center mb-6 flex-wrap gap-2">
+                <h2 class="text-lg font-bold flex items-center gap-2">
+                    <svg class="text-orange-500 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    Hogar
+                </h2>
+                <span id="contador-hogar" class="text-sm text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700" aria-live="polite">--</span>
+            </div>
+            <div id="productos-hogar" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" role="list"></div>
+            <div id="loading-hogar" class="hidden flex justify-center mt-8" aria-live="polite"><div class="spinner"></div></div>
+        </section>
+
+        <!-- MODA SECTION -->
+        <section id="section-moda" class="hidden-section" role="tabpanel">
+            <div class="flex justify-between items-center mb-6 flex-wrap gap-2">
+                <h2 class="text-lg font-bold flex items-center gap-2">
+                    <svg class="text-orange-500 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                    Moda
+                </h2>
+                <span id="contador-moda" class="text-sm text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700" aria-live="polite">--</span>
+            </div>
+            <div id="productos-moda" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" role="list"></div>
+            <div id="loading-moda" class="hidden flex justify-center mt-8" aria-live="polite"><div class="spinner"></div></div>
+        </section>
+
+        <!-- BLOG SECTION -->
+        <section id="section-blog" class="hidden-section" role="tabpanel">
+            <div class="max-w-4xl mx-auto">
+                <h1 class="text-3xl font-bold mb-2">📝 Blog</h1>
+                <p class="text-slate-500 dark:text-slate-400 mb-8">Consejos, guías y noticias sobre las mejores ofertas</p>
+                <div class="grid md:grid-cols-2 gap-6" id="blog-posts" role="list"></div>
+            </div>
+        </section>
+
+        <!-- EMPTY STATE -->
+        <div id="empty-state" class="hidden flex-col items-center justify-center py-20 text-center" role="status" aria-live="polite">
+            <svg class="w-16 h-16 text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+            <h3 class="text-xl font-bold">No hay productos en esta categoría</h3>
+            <p class="text-slate-500 dark:text-slate-400 mt-2">Prueba otra categoría o vuelve más tarde</p>
+            <button onclick="app.navigate('home')" class="mt-4 px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition">Ver todas las ofertas</button>
+        </div>
+
+        <!-- ERROR STATE -->
+        <div id="error-state" class="hidden flex-col items-center justify-center py-20 text-center" role="alert" aria-live="assertive">
+            <svg class="w-16 h-16 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            <h3 class="text-xl font-bold text-red-500">Error de Conexión</h3>
+            <p id="error-message" class="text-slate-500 dark:text-slate-400 mt-2 max-w-md"></p>
+            <button onclick="app.cargar()" class="mt-4 px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                Reintentar
+            </button>
+        </div>
+    </main>
+
+    <!-- DEBUG PANEL -->
+    <div id="debug-panel" class="fixed bottom-0 left-0 right-0 z-50 hidden" role="dialog" aria-label="Panel de debug">
+        <div class="bg-slate-900 text-white rounded-t-2xl shadow-2xl max-h-64 overflow-hidden">
+            <div class="flex items-center justify-between p-4 border-b border-slate-700">
+                <h3 class="font-bold">🐛 Debug Console</h3>
+                <button onclick="app.toggleDebug()" class="p-2 hover:bg-slate-800 rounded" aria-label="Cerrar panel de debug">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto h-40 bg-black font-mono text-xs" id="debug-logs" role="log" aria-live="polite"></div>
+        </div>
     </div>
 
-    <div class="grid" id="productos"></div>
+    <!-- TOAST -->
+    <div id="toast" class="toast fixed bottom-5 right-5 bg-slate-900 text-white px-6 py-3 rounded-lg shadow-xl flex items-center gap-3 z-50" role="alert" aria-live="polite">
+        <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span id="toast-message"></span>
+    </div>
 
+    <!-- FOOTER -->
+    <footer class="bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 py-6 mt-auto" role="contentinfo">
+        <div class="max-w-7xl mx-auto px-4 text-center text-sm text-slate-500 dark:text-slate-400">
+            <p>© 2024 SPAIN LINKS - Todos los derechos reservados</p>
+            <p class="mt-1 text-xs">Como afiliado de Amazon, ganamos con las compras calificadas</p>
+        </div>
+    </footer>
+
+    <!-- APP MODULE (IIFE Pattern) -->
     <script>
-        function cargar(categoria="") {
-            let url = "https://TU_URL.onrender.com/api/ofertas";
-            if(categoria) url += "?categoria=" + categoria;
+    (function() {
+        'use strict';
 
-            fetch(url)
-            .then(res => res.json())
-            .then(data => {
-                let cont = document.getElementById("productos");
-                cont.innerHTML = "";
+        // --- CONFIG ---
+        const CONFIG = {
+            API_URL: "https://ofertas-web.onrender.com/api/ofertas",
+            CACHE_KEY: "spainlinks_cache_v4",
+            CACHE_EXPIRY: 5 * 60 * 1000,
+            ITEMS_PER_PAGE: 12,
+            FALLBACK_IMAGE: "no-image.png"
+        };
 
-                data.forEach(p => {
-                    cont.innerHTML += `
-                        <div class="card">
-                            <img src="${p.imagen}" alt="${p.nombre}">
-                            <div class="card-content">
-                                <h3>${p.nombre}</h3>
-                                <p>${p.precio}</p>
-                                <a href="${p.link}" target="_blank">VER OFERTA</a>
-                            </div>
-                        </div>
-                    `;
-                });
-            });
+        // --- STATE (encapsulated) ---
+        const state = {
+            productosGlobal: [],
+            filteredProducts: [],
+            currentPage: 1,
+            currentSection: 'home',
+            isLoading: false,
+            logs: [],
+            darkMode: false
+        };
+
+        // --- UTILS ---
+        function sanitize(str) {
+            if (typeof DOMPurify !== 'undefined') {
+                return DOMPurify.sanitize(str, { ALLOWED_TAGS: [] });
+            }
+            // Fallback si DOMPurify no carga
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
         }
 
-        cargar();
-    </script>
+        function log(msg, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            state.logs.push(`[${time}] ${msg}`);
+            const container = document.getElementById('debug-logs');
+            if (container) {
+                const div = document.createElement('div');
+                div.className = type === 'error' ? 'text-red-400' : type === 'success' ? 'text-green-400' : 'text-blue-400';
+                div.textContent = `[${time}] ${msg}`;
+                container.insertBefore(div, container.firstChild);
+            }
+            console.log(`[${type.toUpperCase()}] ${msg}`);
+        }
 
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // --- DARK MODE ---
+        function initDarkMode() {
+            const saved = localStorage.getItem('spainlinks_darkmode');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            state.darkMode = saved ? JSON.parse(saved) : systemPrefersDark;
+            applyDarkMode();
+        }
+
+        function applyDarkMode() {
+            if (state.darkMode) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+
+        function toggleDarkMode() {
+            state.darkMode = !state.darkMode;
+            localStorage.setItem('spainlinks_darkmode', JSON.stringify(state.darkMode));
+            applyDarkMode();
+            log(`Modo oscuro: ${state.darkMode ? 'activado' : 'desactivado'}`, 'info');
+        }
+
+        // --- CACHE ---
+        function getCachedData() {
+            try {
+                const cached = localStorage.getItem(CONFIG.CACHE_KEY);
+                if (!cached) return null;
+                const { data, timestamp } = JSON.parse(cached);
+                if (Date.now() - timestamp > CONFIG.CACHE_EXPIRY) {
+                    localStorage.removeItem(CONFIG.CACHE_KEY);
+                    return null;
+                }
+                return data;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function saveToCache(data) {
+            try {
+                localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
+                log('Cache actualizado: ' + data.length + ' productos', 'success');
+            } catch (e) {
+                log('Error guardando cache', 'error');
+            }
+        }
+
+        function clearCache() {
+            localStorage.removeItem(CONFIG.CACHE_KEY);
+            log('Cache limpiado', 'warning');
+            showToast('Cache limpiado - Recargando...');
+            setTimeout(() => app.cargar(), 500);
+        }
+
+        // --- NAVIGATION ---
+        function navigate(section) {
+            log(`Navegando a: ${section}`, 'info');
+            state.currentSection = section;
+            window.location.hash = section;
+            
+            document.querySelectorAll('section').forEach(s => {
+                s.classList.remove('active-section');
+                s.classList.add('hidden-section');
+            });
+            
+            const target = document.getElementById(`section-${section}`);
+            if (target) {
+                target.classList.remove('hidden-section');
+                target.classList.add('active-section');
+            }
+            
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                btn.classList.remove('active', 'bg-orange-500', 'text-white');
+                btn.classList.add('text-slate-600', 'dark:text-slate-300');
+                btn.setAttribute('aria-selected', 'false');
+            });
+            
+            const activeBtn = document.querySelector(`button[onclick="app.navigate('${section}')"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active', 'bg-orange-500', 'text-white');
+                activeBtn.classList.remove('text-slate-600', 'dark:text-slate-300');
+                activeBtn.setAttribute('aria-selected', 'true');
+            }
+            
+            if (section === 'home') {
+                app.cargar('');
+            } else if (section === 'blog') {
+                renderBlog();
+            } else {
+                app.cargar(section);
+            }
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // --- BLOG ---
+        const blogPosts = [
+            { title: "Cómo encontrar las mejores ofertas en Amazon", category: "Guías", excerpt: "Aprende los trucos para identificar descuentos reales.", date: "15 Ene 2024" },
+            { title: "Los mejores momentos para comprar tecnología", category: "Consejos", excerpt: "Descubre cuándo es el mejor momento del año.", date: "10 Ene 2024" },
+            { title: "Guía completa de Prime Day 2024", category: "Eventos", excerpt: "Todo lo que necesitas saber sobre el evento.", date: "5 Ene 2024" },
+            { title: "Cómo proteger tus compras online", category: "Seguridad", excerpt: "Consejos esenciales para comprar seguro.", date: "1 Ene 2024" }
+        ];
+
+        function renderBlog() {
+            const container = document.getElementById('blog-posts');
+            container.innerHTML = blogPosts.map(post => `
+                <article class="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-lg transition cursor-pointer" role="listitem">
+                    <div class="h-40 bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center">
+                        <svg class="w-12 h-12 text-white opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <div class="p-6">
+                        <span class="text-xs text-orange-500 font-medium bg-orange-100 dark:bg-orange-900 px-2 py-1 rounded">${sanitize(post.category)}</span>
+                        <h3 class="text-lg font-bold mt-2 mb-2">${sanitize(post.title)}</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">${sanitize(post.excerpt)}</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-slate-400">${sanitize(post.date)}</span>
+                            <span class="text-orange-500 text-sm font-medium">Leer más →</span>
+                        </div>
+                    </div>
+                </article>
+            `).join('');
+            log('Blog renderizado', 'success');
+        }
+
+        // --- PRODUCT CARD (Secure DOM creation) ---
+        function createProductCard(p) {
+            const descuento = calcularDescuento(p);
+            const imgSrc = p.imagen || CONFIG.FALLBACK_IMAGE;
+            
+            const card = document.createElement('article');
+            card.className = 'product-card bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700 relative';
+            card.setAttribute('role', 'listitem');
+            
+            // Discount Badge
+            if (descuento > 0) {
+                const badge = document.createElement('div');
+                badge.className = 'discount-badge absolute top-3 left-3 z-10 bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1';
+                badge.innerHTML = `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> -${descuento}%`;
+                card.appendChild(badge);
+            }
+            
+            // Image Container
+            const imgContainer = document.createElement('div');
+            imgContainer.className = 'h-48 bg-slate-50 dark:bg-slate-700 p-4 flex items-center justify-center overflow-hidden';
+            const img = document.createElement('img');
+            img.src = sanitize(imgSrc);
+            img.alt = sanitize(p.nombre || 'Producto');
+            img.className = 'max-h-full max-w-full object-contain hover:scale-105 transition-transform duration-300';
+            img.loading = 'lazy';
+            img.onerror = function() { this.src = CONFIG.FALLBACK_IMAGE; };
+            imgContainer.appendChild(img);
+            card.appendChild(imgContainer);
+            
+            // Content Container
+            const content = document.createElement('div');
+            content.className = 'p-4';
+            
+            // Category
+            const catSpan = document.createElement('span');
+            catSpan.className = 'text-[10px] uppercase tracking-wider font-bold text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded';
+            catSpan.textContent = sanitize(p.categoria || 'General');
+            content.appendChild(catSpan);
+            
+            // Product Name
+            const name = document.createElement('h3');
+            name.className = 'font-semibold text-sm mt-2 mb-3 line-clamp-2 h-10 text-slate-800 dark:text-slate-200';
+            name.title = sanitize(p.nombre || '');
+            name.textContent = sanitize(p.nombre || 'Producto sin nombre');
+            content.appendChild(name);
+            
+            // Prices
+            const priceContainer = document.createElement('div');
+            priceContainer.className = 'flex items-center gap-2 mb-3 flex-wrap';
+            
+            if (descuento > 0) {
+                const newPrice = document.createElement('span');
+                newPrice.className = 'price-new text-2xl font-extrabold text-red-600 dark:text-red-400';
+                newPrice.textContent = sanitize(p.precio || '?');
+                priceContainer.appendChild(newPrice);
+                
+                const oldPrice = document.createElement('span');
+                oldPrice.className = 'text-sm text-slate-400 line-through';
+                oldPrice.textContent = sanitize(p.precio_antes || '');
+                priceContainer.appendChild(oldPrice);
+            } else {
+                const price = document.createElement('span');
+                price.className = 'text-2xl font-extrabold text-slate-900 dark:text-white';
+                price.textContent = sanitize(p.precio || '?');
+                priceContainer.appendChild(price);
+            }
+            content.appendChild(priceContainer);
+            
+            // Savings Info
+            if (descuento > 0) {
+                const savings = document.createElement('div');
+                savings.className = 'mb-3 text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1';
+                savings.innerHTML = `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Ahorras ${descuento}%`;
+                content.appendChild(savings);
+            }
+            
+            // Button
+            const link = document.createElement('a');
+            link.href = sanitize(p.link || '#');
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.className = 'block w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-xl text-center transition flex items-center justify-center gap-2 shadow-md hover:shadow-orange-500/30';
+            link.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg> Ver Oferta`;
+            content.appendChild(link);
+            
+            card.appendChild(content);
+            return card;
+        }
+
+        // --- RENDER ---
+        function renderSkeletons(containerId, count = 8) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            if (state.currentPage === 1) container.innerHTML = '';
+            
+            for (let i = 0; i < count; i++) {
+                const skeleton = document.createElement('div');
+                skeleton.className = 'bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700 h-96';
+                skeleton.innerHTML = `
+                    <div class="h-48 skeleton w-full"></div>
+                    <div class="p-4 space-y-3">
+                        <div class="h-4 skeleton w-3/4 rounded"></div>
+                        <div class="h-4 skeleton w-1/2 rounded"></div>
+                        <div class="h-10 skeleton w-full rounded-lg mt-4"></div>
+                    </div>
+                `;
+                container.appendChild(skeleton);
+            }
+        }
+
+        function renderProducts(products, containerId, counterId) {
+            const container = document.getElementById(containerId);
+            const counter = document.getElementById(counterId);
+            
+            if (!container) {
+                log(`Container ${containerId} no encontrado`, 'error');
+                return;
+            }
+
+            if (products.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-20">
+                        <svg class="w-16 h-16 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                        <p class="text-slate-500 dark:text-slate-400">No hay productos en esta categoría</p>
+                    </div>
+                `;
+                if (counter) counter.textContent = '0 productos';
+                return;
+            }
+
+            const startIndex = 0;
+            const endIndex = state.currentPage * CONFIG.ITEMS_PER_PAGE;
+            const toRender = products.slice(startIndex, endIndex);
+
+            if (state.currentPage === 1) {
+                container.innerHTML = '';
+            }
+
+            toRender.forEach(p => {
+                const card = createProductCard(p);
+                container.appendChild(card);
+            });
+
+            if (counter) {
+                counter.textContent = `${products.length} productos`;
+            }
+
+            const loadMoreBtn = document.getElementById('load-more-btn');
+            if (loadMoreBtn) {
+                loadMoreBtn.classList.toggle('hidden', endIndex >= products.length);
+            }
+
+            log(`${toRender.length} productos renderizados en ${containerId}`, 'success');
+        }
+
+        // --- API ---
+        async function cargar(categoria = '') {
+            log(`Cargando categoría: ${categoria || 'todas'}`, 'info');
+            
+            state.isLoading = true;
+            state.currentPage = 1;
+            
+            const loadingId = categoria ? `loading-${categoria}` : 'loading';
+            const loadingEl = document.getElementById(loadingId);
+            if (loadingEl) loadingEl.classList.remove('hidden');
+
+            document.getElementById('error-state').classList.add('hidden');
+            document.getElementById('error-state').classList.remove('flex');
+            document.getElementById('empty-state').classList.add('hidden');
+            document.getElementById('empty-state').classList.remove('flex');
+
+            try {
+                let url = CONFIG.API_URL;
+                if (categoria) url += `?categoria=${encodeURIComponent(categoria)}`;
+
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 15000);
+
+                const start = Date.now();
+                const response = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeout);
+                const duration = Date.now() - start;
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const data = await response.json();
+                state.productosGlobal = data;
+                
+                saveToCache(data);
+                
+                document.getElementById('api-status').classList.remove('bg-red-500', 'bg-yellow-500');
+                document.getElementById('api-status').classList.add('bg-green-500');
+                document.getElementById('api-status-text').textContent = 'API Online';
+                document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+                document.getElementById('products-count').textContent = `${data.length} productos`;
+
+                log(`API OK - ${data.length} productos - ${duration}ms`, 'success');
+
+                if (categoria) {
+                    const filtered = data.filter(p => 
+                        (p.categoria || '').toLowerCase().includes(categoria.toLowerCase()) ||
+                        (p.nombre || '').toLowerCase().includes(categoria.toLowerCase())
+                    );
+                    renderProducts(filtered, `productos-${categoria}`, `contador-${categoria}`);
+                    
+                    if (filtered.length === 0) {
+                        document.getElementById('empty-state').classList.remove('hidden');
+                        document.getElementById('empty-state').classList.add('flex');
+                    }
+                } else {
+                    renderProducts(data, 'productos', 'contador');
+                }
+
+            } catch (error) {
+                log(`Error cargando: ${error.message}`, 'error');
+                
+                const cached = getCachedData();
+                if (cached) {
+                    state.productosGlobal = cached;
+                    log('Usando datos en caché', 'warning');
+                    showToast('Usando datos en caché');
+                    
+                    if (categoria) {
+                        const filtered = cached.filter(p => 
+                            (p.categoria || '').toLowerCase().includes(categoria.toLowerCase())
+                        );
+                        renderProducts(filtered, `productos-${categoria}`, `contador-${categoria}`);
+                    } else {
+                        renderProducts(cached, 'productos', 'contador');
+                    }
+                } else {
+                    document.getElementById('error-state').classList.remove('hidden');
+                    document.getElementById('error-state').classList.add('flex');
+                    document.getElementById('error-message').textContent = error.message;
+                    
+                    document.getElementById('api-status').classList.remove('bg-green-500');
+                    document.getElementById('api-status').classList.add('bg-red-500');
+                    document.getElementById('api-status-text').textContent = 'API Offline';
+                }
+            } finally {
+                state.isLoading = false;
+                if (loadingEl) loadingEl.classList.add('hidden');
+            }
+        }
+
+        // --- FILTER ---
+        function filtrar() {
+            const query = document.getElementById('busqueda').value.toLowerCase();
+            const orden = document.getElementById('orden').value;
+
+            let filtered = state.productosGlobal.filter(p => 
+                (p.nombre || '').toLowerCase().includes(query) ||
+                (p.categoria || '').toLowerCase().includes(query)
+            );
+
+            if (orden === 'precio_asc') {
+                filtered.sort((a, b) => extraerPrecio(a.precio) - extraerPrecio(b.precio));
+            } else if (orden === 'precio_desc') {
+                filtered.sort((a, b) => extraerPrecio(b.precio) - extraerPrecio(a.precio));
+            } else if (orden === 'descuento') {
+                filtered.sort((a, b) => calcularDescuento(b) - calcularDescuento(a));
+            }
+
+            state.filteredProducts = filtered;
+            state.currentPage = 1;
+
+            if (state.currentSection === 'home') {
+                renderProducts(filtered, 'productos', 'contador');
+            } else if (['tecnologia', 'hogar', 'moda'].includes(state.currentSection)) {
+                renderProducts(filtered, `productos-${state.currentSection}`, `contador-${state.currentSection}`);
+            }
+        }
+
+        // --- LOAD MORE ---
+        function loadMore() {
+            if (state.isLoading) return;
+            state.currentPage++;
+            
+            if (state.currentSection === 'home') {
+                renderProducts(state.filteredProducts.length > 0 ? state.filteredProducts : state.productosGlobal, 'productos', 'contador');
+            } else if (['tecnologia', 'hogar', 'moda'].includes(state.currentSection)) {
+                const filtered = state.productosGlobal.filter(p => 
+                    (p.categoria || '').toLowerCase().includes(state.currentSection.toLowerCase())
+                );
+                renderProducts(filtered, `productos-${state.currentSection}`, `contador-${state.currentSection}`);
+            }
+            
+            log(`Página ${state.currentPage} cargada`, 'info');
+        }
+
+        // --- UTILS ---
+        function extraerPrecio(precio) {
+            if (!precio) return 0;
+            const clean = precio.toString().replace(/[^\d.,]/g, '').replace(',', '.');
+            return parseFloat(clean) || 0;
+        }
+
+        function calcularDescuento(p) {
+            if (!p.precio_antes) return 0;
+            const actual = extraerPrecio(p.precio);
+            const antes = extraerPrecio(p.precio_antes);
+            if (!antes || antes <= actual) return 0;
+            return Math.round(((antes - actual) / antes) * 100);
+        }
+
+        function toggleDebug() {
+            document.getElementById('debug-panel').classList.toggle('hidden');
+        }
+
+        // --- INFINITE SCROLL (with limit) ---
+        const MAX_PAGES = 10; // Limitar a 120 productos máximo
+        let scrollTimeout;
+        
+        window.addEventListener('scroll', () => {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                const scrollHeight = document.documentElement.scrollHeight;
+                const scrollTop = document.documentElement.scrollTop;
+                const clientHeight = document.documentElement.clientHeight;
+                
+                if (scrollTop + clientHeight >= scrollHeight - 500 && 
+                    state.currentSection !== 'blog' && 
+                    !state.isLoading &&
+                    state.currentPage < MAX_PAGES) {
+                    loadMore();
+                }
+            }, 200);
+        });
+
+        // --- SEARCH DEBOUNCE ---
+        let searchTimeout;
+        document.getElementById('busqueda').addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                filtrar();
+            }, 300);
+        });
+
+        // --- PUBLIC API ---
+        window.app = {
+            cargar,
+            filtrar,
+            navigate,
+            loadMore,
+            toggleDebug,
+            toggleDarkMode,
+            clearCache
+        };
+
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initDarkMode();
+            log('🚀 Aplicación iniciada (Production Mode)', 'success');
+            
+            const hash = window.location.hash.slice(1) || 'home';
+            if (['home', 'tecnologia', 'hogar', 'moda', 'blog'].includes(hash)) {
+                navigate(hash);
+            } else {
+                navigate('home');
+            }
+
+            window.addEventListener('hashchange', () => {
+                const hash = window.location.hash.slice(1) || 'home';
+                if (['home', 'tecnologia', 'hogar', 'moda', 'blog'].includes(hash)) {
+                    navigate(hash);
+                }
+            });
+        });
+
+    })();
+    </script>
 </body>
 </html>
+
+
