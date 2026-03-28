@@ -52,6 +52,31 @@ def init_db():
         )
         """)
         
+        # ✅ Verificar y añadir columnas si no existen
+        c.execute("""
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name='ofertas'
+        """)
+        
+        columnas_existentes = [row[0] for row in c.fetchall()]
+        
+        if 'descripcion' not in columnas_existentes:
+            logger.info("⚠️ Añadiendo columna 'descripcion'...")
+            c.execute("ALTER TABLE ofertas ADD COLUMN descripcion TEXT")
+        
+        if 'activo' not in columnas_existentes:
+            logger.info("⚠️ Añadiendo columna 'activo'...")
+            c.execute("ALTER TABLE ofertas ADD COLUMN activo BOOLEAN DEFAULT TRUE")
+        
+        if 'fecha_creacion' not in columnas_existentes:
+            logger.info("⚠️ Añadiendo columna 'fecha_creacion'...")
+            c.execute("ALTER TABLE ofertas ADD COLUMN fecha_creacion TIMESTAMP DEFAULT NOW()")
+        
+        if 'ultima_verificacion' not in columnas_existentes:
+            logger.info("⚠️ Añadiendo columna 'ultima_verificacion'...")
+            c.execute("ALTER TABLE ofertas ADD COLUMN ultima_verificacion TIMESTAMP DEFAULT NOW()")
+        
         conn.commit()
         conn.close()
         logger.info("✅ Base de datos inicializada correctamente")
@@ -92,7 +117,7 @@ def add_oferta():
         logger.error(f"❌ Error add_oferta: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-# ✅ OBTENER OFERTAS - ✅ USANDO NOMBRES DE COLUMNAS (NO ÍNDICES)
+# ✅ OBTENER OFERTAS - ✅ CONSULTA CON COLUMNAS EXPLÍCITAS
 @app.route("/api/ofertas", methods=["GET"])
 def get_ofertas():
     try:
@@ -156,7 +181,7 @@ def get_ofertas():
         logger.error(f"❌ Error get_ofertas: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-# ✅ ACTUALIZAR ESTADO ACTIVO/INACTIVO
+# ✅ ACTUALIZAR ESTADO ACTIVO/INACTIVO - ✅ SINTAXIS CORREGIDA
 @app.route("/api/ofertas/<int:id>/activo", methods=["PATCH"])
 def update_activo(id):
     try:
@@ -180,7 +205,7 @@ def update_activo(id):
         logger.error(f"❌ Error update_activo: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-# ✅ ACTUALIZAR DESCRIPCIÓN (para migración)
+# ✅ ACTUALIZAR DESCRIPCIÓN (para migración) - ✅ SINTAXIS CORREGIDA
 @app.route("/api/ofertas/<int:id>", methods=["PATCH"])
 def update_descripcion(id):
     """Actualiza solo el campo descripción de una oferta"""
@@ -189,7 +214,8 @@ def update_descripcion(id):
         conn = conectar()
         c = conn.cursor()
         
-        if "descripcion" in 
+        # ✅ CORREGIDO: Verificar si "descripcion" está en data
+        if "descripcion" in data:
             c.execute("""
             UPDATE ofertas 
             SET descripcion=%s 
@@ -204,7 +230,7 @@ def update_descripcion(id):
         logger.error(f"❌ Error update_descripcion: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-# ✅ ELIMINAR OFERTA
+# ✅ ELIMINAR OFERTA - ✅ SINTAXIS CORREGIDA
 @app.route("/api/ofertas/<int:id>", methods=["DELETE"])
 def delete_oferta(id):
     try:
