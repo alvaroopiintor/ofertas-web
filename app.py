@@ -52,31 +52,6 @@ def init_db():
         )
         """)
         
-        # ✅ Verificar y añadir columnas si no existen
-        c.execute("""
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name='ofertas'
-        """)
-        
-        columnas_existentes = [row[0] for row in c.fetchall()]
-        
-        if 'descripcion' not in columnas_existentes:
-            logger.info("⚠️ Añadiendo columna 'descripcion'...")
-            c.execute("ALTER TABLE ofertas ADD COLUMN descripcion TEXT")
-        
-        if 'activo' not in columnas_existentes:
-            logger.info("⚠️ Añadiendo columna 'activo'...")
-            c.execute("ALTER TABLE ofertas ADD COLUMN activo BOOLEAN DEFAULT TRUE")
-        
-        if 'fecha_creacion' not in columnas_existentes:
-            logger.info("⚠️ Añadiendo columna 'fecha_creacion'...")
-            c.execute("ALTER TABLE ofertas ADD COLUMN fecha_creacion TIMESTAMP DEFAULT NOW()")
-        
-        if 'ultima_verificacion' not in columnas_existentes:
-            logger.info("⚠️ Añadiendo columna 'ultima_verificacion'...")
-            c.execute("ALTER TABLE ofertas ADD COLUMN ultima_verificacion TIMESTAMP DEFAULT NOW()")
-        
         conn.commit()
         conn.close()
         logger.info("✅ Base de datos inicializada correctamente")
@@ -95,7 +70,7 @@ def add_oferta():
         conn = conectar()
         c = conn.cursor()
         
-        logger.info(f"📦 Recibido POST: nombre={data.get('nombre', '')[:30]}..., desc_len={len(data.get('descripcion', ''))}")
+        logger.info(f"📦 Recibido POST: nombre={data.get('nombre', '')[:30]}..., desc_len={len(str(data.get('descripcion', '')))}")
         
         c.execute("""
         INSERT INTO ofertas (nombre, precio, link, imagen, categoria, descripcion, activo)
@@ -117,7 +92,7 @@ def add_oferta():
         logger.error(f"❌ Error add_oferta: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-# ✅ OBTENER OFERTAS
+# ✅ OBTENER OFERTAS - ✅ USANDO NOMBRES DE COLUMNAS (NO ÍNDICES)
 @app.route("/api/ofertas", methods=["GET"])
 def get_ofertas():
     try:
@@ -127,35 +102,41 @@ def get_ofertas():
         conn = conectar()
         c = conn.cursor()
         
+        # ✅ CONSULTA CON NOMBRES DE COLUMNAS EXPLÍCITOS
         if activos.lower() == "true":
             if categoria:
                 c.execute("""
-                    SELECT * FROM ofertas 
+                    SELECT id, nombre, precio, link, imagen, categoria, descripcion, activo, fecha_creacion 
+                    FROM ofertas 
                     WHERE categoria=%s AND activo=TRUE 
                     ORDER BY fecha_creacion DESC
                 """, (categoria,))
             else:
                 c.execute("""
-                    SELECT * FROM ofertas 
+                    SELECT id, nombre, precio, link, imagen, categoria, descripcion, activo, fecha_creacion 
+                    FROM ofertas 
                     WHERE activo=TRUE 
                     ORDER BY fecha_creacion DESC
                 """)
         else:
             if categoria:
                 c.execute("""
-                    SELECT * FROM ofertas 
+                    SELECT id, nombre, precio, link, imagen, categoria, descripcion, activo, fecha_creacion 
+                    FROM ofertas 
                     WHERE categoria=%s 
                     ORDER BY fecha_creacion DESC
                 """, (categoria,))
             else:
                 c.execute("""
-                    SELECT * FROM ofertas 
+                    SELECT id, nombre, precio, link, imagen, categoria, descripcion, activo, fecha_creacion 
+                    FROM ofertas 
                     ORDER BY fecha_creacion DESC
                 """)
         
         rows = c.fetchall()
         conn.close()
         
+        # ✅ CONVERTIR FILAS A DICCIONARIOS USANDO NOMBRES DE COLUMNAS
         ofertas = []
         for r in rows:
             ofertas.append({
@@ -165,9 +146,9 @@ def get_ofertas():
                 "link": r[3],
                 "imagen": r[4],
                 "categoria": r[5],
-                "descripcion": str(r[6]) if len(r) > 6 and r[6] is not None else "",
-                "activo": bool(r[7]) if len(r) > 7 else True,
-                "fecha_creacion": str(r[8]) if len(r) > 8 else None
+                "descripcion": str(r[6]) if r[6] is not None else "",  # ✅ AHORA SÍ ES DESCRIPCIÓN
+                "activo": bool(r[7]) if r[7] is not None else True,    # ✅ AHORA SÍ ES ACTIVO
+                "fecha_creacion": str(r[8]) if r[8] is not None else None
             })
         
         return jsonify(ofertas)
@@ -175,7 +156,7 @@ def get_ofertas():
         logger.error(f"❌ Error get_ofertas: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-# ✅ ACTUALIZAR ESTADO ACTIVO/INACTIVO - ✅ RUTA CORREGIDA
+# ✅ ACTUALIZAR ESTADO ACTIVO/INACTIVO
 @app.route("/api/ofertas/<int:id>/activo", methods=["PATCH"])
 def update_activo(id):
     try:
@@ -199,7 +180,7 @@ def update_activo(id):
         logger.error(f"❌ Error update_activo: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-# ✅ NUEVA RUTA: ACTUALIZAR DESCRIPCIÓN (para migración)
+# ✅ ACTUALIZAR DESCRIPCIÓN (para migración)
 @app.route("/api/ofertas/<int:id>", methods=["PATCH"])
 def update_descripcion(id):
     """Actualiza solo el campo descripción de una oferta"""
@@ -208,8 +189,7 @@ def update_descripcion(id):
         conn = conectar()
         c = conn.cursor()
         
-        # Solo actualizar descripción si se proporciona
-        if "descripcion" in data:
+        if "descripcion" in 
             c.execute("""
             UPDATE ofertas 
             SET descripcion=%s 
