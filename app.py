@@ -2,10 +2,15 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import psycopg2
 import os
+import logging
 from urllib.parse import urlparse
 from datetime import datetime
 
-app = Flask(__name__)  # ✅ CORREGIDO: __name__ con doble guión
+# Configurar logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+app = Flask(__name__)
 CORS(app)
 
 # ==================== CONEXIÓN A BASE DE DATOS ====================
@@ -47,7 +52,7 @@ def init_db():
         )
         """)
         
-        # ✅ Verificar y añadir columnas si no existen (para tablas existentes)
+        # ✅ Verificar y añadir columnas si no existen
         c.execute("""
         SELECT column_name 
         FROM information_schema.columns 
@@ -57,26 +62,26 @@ def init_db():
         columnas_existentes = [row[0] for row in c.fetchall()]
         
         if 'descripcion' not in columnas_existentes:
-            print("⚠️ Añadiendo columna 'descripcion'...")
+            logger.info("⚠️ Añadiendo columna 'descripcion'...")
             c.execute("ALTER TABLE ofertas ADD COLUMN descripcion TEXT")
         
         if 'activo' not in columnas_existentes:
-            print("⚠️ Añadiendo columna 'activo'...")
+            logger.info("⚠️ Añadiendo columna 'activo'...")
             c.execute("ALTER TABLE ofertas ADD COLUMN activo BOOLEAN DEFAULT TRUE")
         
         if 'fecha_creacion' not in columnas_existentes:
-            print("⚠️ Añadiendo columna 'fecha_creacion'...")
+            logger.info("⚠️ Añadiendo columna 'fecha_creacion'...")
             c.execute("ALTER TABLE ofertas ADD COLUMN fecha_creacion TIMESTAMP DEFAULT NOW()")
         
         if 'ultima_verificacion' not in columnas_existentes:
-            print("⚠️ Añadiendo columna 'ultima_verificacion'...")
+            logger.info("⚠️ Añadiendo columna 'ultima_verificacion'...")
             c.execute("ALTER TABLE ofertas ADD COLUMN ultima_verificacion TIMESTAMP DEFAULT NOW()")
         
         conn.commit()
         conn.close()
-        print("✅ Base de datos inicializada correctamente")
+        logger.info("✅ Base de datos inicializada correctamente")
     except Exception as e:
-        print(f"❌ Error inicializando DB: {e}")
+        logger.error(f"❌ Error inicializando DB: {e}")
 
 init_db()
 
@@ -90,6 +95,8 @@ def add_oferta():
         conn = conectar()
         c = conn.cursor()
         
+        logger.info(f"📦 Recibido POST: nombre={data.get('nombre', '')[:30]}..., desc_len={len(data.get('descripcion', ''))}")
+        
         c.execute("""
         INSERT INTO ofertas (nombre, precio, link, imagen, categoria, descripcion, activo)
         VALUES (%s, %s, %s, %s, %s, %s, %s)
@@ -99,27 +106,27 @@ def add_oferta():
             data.get("link"),
             data.get("imagen"),
             data.get("categoria"),
-            data.get("descripcion", ""),  # ✅ NUEVO: descripción opcional
-            data.get("activo", True)       # ✅ NUEVO: activo por defecto
+            data.get("descripcion", ""),
+            data.get("activo", True)
         ))
         
         conn.commit()
         conn.close()
         return jsonify({"status": "ok"})
     except Exception as e:
+        logger.error(f"❌ Error add_oferta: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-# ✅ OBTENER OFERTAS (filtra solo activas por defecto)
+# ✅ OBTENER OFERTAS
 @app.route("/api/ofertas", methods=["GET"])
 def get_ofertas():
     try:
         categoria = request.args.get("categoria")
-        activos = request.args.get("activos", "true")  # ✅ Parámetro opcional
+        activos = request.args.get("activos", "true")
         
         conn = conectar()
         c = conn.cursor()
         
-        # ✅ FILTRAR SOLO PRODUCTOS ACTIVOS POR DEFECTO
         if activos.lower() == "true":
             if categoria:
                 c.execute("""
@@ -134,7 +141,6 @@ def get_ofertas():
                     ORDER BY fecha_creacion DESC
                 """)
         else:
-            # Si se piden todos (activos + inactivos)
             if categoria:
                 c.execute("""
                     SELECT * FROM ofertas 
@@ -159,16 +165,17 @@ def get_ofertas():
                 "link": r[3],
                 "imagen": r[4],
                 "categoria": r[5],
-                "descripcion": r[6] if len(r) > 6 else "",
-                "activo": r[7] if len(r) > 7 else True,
+                "descripcion": str(r[6]) if len(r) > 6 and r[6] is not None else "",
+                "activo": bool(r[7]) if len(r) > 7 else True,
                 "fecha_creacion": str(r[8]) if len(r) > 8 else None
             })
         
         return jsonify(ofertas)
     except Exception as e:
+        logger.error(f"❌ Error get_ofertas: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-# ✅ ACTUALIZAR ESTADO ACTIVO/INACTIVO (NUEVA RUTA)
+# ✅ ACTUALIZAR ESTADO ACTIVO/INACTIVO - ✅ RUTA CORREGIDA
 @app.route("/api/ofertas/<int:id>/activo", methods=["PATCH"])
 def update_activo(id):
     try:
@@ -189,6 +196,32 @@ def update_activo(id):
         
         return jsonify({"status": "ok", "activo": activo})
     except Exception as e:
+        logger.error(f"❌ Error update_activo: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+# ✅ NUEVA RUTA: ACTUALIZAR DESCRIPCIÓN (para migración)
+@app.route("/api/ofertas/<int:id>", methods=["PATCH"])
+def update_descripcion(id):
+    """Actualiza solo el campo descripción de una oferta"""
+    try:
+        data = request.json
+        conn = conectar()
+        c = conn.cursor()
+        
+        # Solo actualizar descripción si se proporciona
+        if "descripcion" in data:
+            c.execute("""
+            UPDATE ofertas 
+            SET descripcion=%s 
+            WHERE id=%s
+            """, (data["descripcion"], id))
+            conn.commit()
+            logger.info(f"✅ Descripción actualizada para producto {id}")
+        
+        conn.close()
+        return jsonify({"status": "ok"})
+    except Exception as e:
+        logger.error(f"❌ Error update_descripcion: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 # ✅ ELIMINAR OFERTA
@@ -202,24 +235,22 @@ def delete_oferta(id):
         conn.close()
         return jsonify({"status": "deleted"})
     except Exception as e:
+        logger.error(f"❌ Error delete_oferta: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-# ✅ OBTENER ESTADÍSTICAS (NUEVA RUTA)
+# ✅ OBTENER ESTADÍSTICAS
 @app.route("/api/estadisticas", methods=["GET"])
 def get_estadisticas():
     try:
         conn = conectar()
         c = conn.cursor()
         
-        # Total productos
         c.execute("SELECT COUNT(*) FROM ofertas")
         total = c.fetchone()[0]
         
-        # Activos
         c.execute("SELECT COUNT(*) FROM ofertas WHERE activo=TRUE")
         activos = c.fetchone()[0]
         
-        # Inactivos
         c.execute("SELECT COUNT(*) FROM ofertas WHERE activo=FALSE")
         inactivos = c.fetchone()[0]
         
@@ -231,6 +262,7 @@ def get_estadisticas():
             "inactivos": inactivos
         })
     except Exception as e:
+        logger.error(f"❌ Error get_estadisticas: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 # ==================== RUN APP ====================
