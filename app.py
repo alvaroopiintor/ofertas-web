@@ -5,7 +5,6 @@ import os
 import logging
 from urllib.parse import urlparse
 from datetime import datetime
-<<<<<<< HEAD
 from functools import wraps
 
 # ==================== CONFIGURACIÓN LOGGING ====================
@@ -85,7 +84,7 @@ def requiere_api_key(f):
         return f(*args, **kwargs)
     return decorated
 
-=======
+
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -94,16 +93,17 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)
 
->>>>>>> 083f8c7 (Añadir ruta PATCH para descripciones)
+
+
 # ==================== CONEXIÓN A BASE DE DATOS ====================
 def conectar():
     DATABASE_URL = os.environ.get("DATABASE_URL")
     if not DATABASE_URL:
         raise Exception("DATABASE_URL no configurada en Render")
-<<<<<<< HEAD
-=======
+
+
     
->>>>>>> 083f8c7 (Añadir ruta PATCH para descripciones)
+
     result = urlparse(DATABASE_URL)
     conn = psycopg2.connect(
         database=result.path[1:],
@@ -121,11 +121,10 @@ def init_db():
         conn = conectar()
         c = conn.cursor()
         
-<<<<<<< HEAD
+
         # ✅ TABLA PRINCIPAL DE OFERTAS
-=======
+
         # ✅ TABLA COMPLETA CON TODOS LOS CAMPOS NECESARIOS
->>>>>>> 083f8c7 (Añadir ruta PATCH para descripciones)
         c.execute("""
         CREATE TABLE IF NOT EXISTS ofertas (
             id SERIAL PRIMARY KEY,
@@ -141,7 +140,7 @@ def init_db():
         )
         """)
         
-<<<<<<< HEAD
+
         # ✅ Verificar columnas existentes
         c.execute("SELECT column_name FROM information_schema.columns WHERE table_name='ofertas'")
         columnas_existentes = [row[0] for row in c.fetchall()]
@@ -173,7 +172,7 @@ def init_db():
         )
         """)
         
-=======
+
         # ✅ Verificar y añadir columnas si no existen
         c.execute("""
         SELECT column_name 
@@ -199,7 +198,8 @@ def init_db():
             logger.info("⚠️ Añadiendo columna 'ultima_verificacion'...")
             c.execute("ALTER TABLE ofertas ADD COLUMN ultima_verificacion TIMESTAMP DEFAULT NOW()")
         
->>>>>>> 083f8c7 (Añadir ruta PATCH para descripciones)
+
+
         conn.commit()
         conn.close()
         logger.info("✅ Base de datos inicializada correctamente")
@@ -210,10 +210,10 @@ init_db()
 
 # ==================== RUTAS API ====================
 
-<<<<<<< HEAD
-=======
+
 # ✅ AÑADIR OFERTA (con descripción)
->>>>>>> 083f8c7 (Añadir ruta PATCH para descripciones)
+
+
 @app.route("/api/ofertas", methods=["POST"])
 @requiere_api_key
 def add_oferta():
@@ -221,14 +221,15 @@ def add_oferta():
         data = request.json
         conn = conectar()
         c = conn.cursor()
-<<<<<<< HEAD
+
+
         logger.info(f"📦 Recibido POST: nombre={data.get('nombre', '')[:30]}...")
         c.execute("""
         INSERT INTO ofertas (nombre, precio, link, imagen, categoria, descripcion, activo)
         VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (data.get("nombre"), data.get("precio"), data.get("link"), data.get("imagen"),
               data.get("categoria"), data.get("descripcion", ""), data.get("activo", True)))
-=======
+
         
         logger.info(f"📦 Recibido POST: nombre={data.get('nombre', '')[:30]}..., desc_len={len(data.get('descripcion', ''))}")
         
@@ -245,7 +246,8 @@ def add_oferta():
             data.get("activo", True)
         ))
         
->>>>>>> 083f8c7 (Añadir ruta PATCH para descripciones)
+
+
         conn.commit()
         conn.close()
         return jsonify({"status": "ok"})
@@ -260,7 +262,8 @@ def get_ofertas():
         categoria = request.args.get("categoria")
         activos = request.args.get("activos", "true")
         
-<<<<<<< HEAD
+
+
         # ✅ Paginación desde la DB
         page = max(1, int(request.args.get("page", 1)))
         limit = min(100, max(1, int(request.args.get("limit", 20))))
@@ -294,7 +297,7 @@ def get_ofertas():
             ORDER BY fecha_creacion DESC
             LIMIT %s OFFSET %s
         """, tuple(params) + (limit, offset))
-=======
+
         conn = conectar()
         c = conn.cursor()
         
@@ -323,7 +326,8 @@ def get_ofertas():
                     SELECT * FROM ofertas 
                     ORDER BY fecha_creacion DESC
                 """)
->>>>>>> 083f8c7 (Añadir ruta PATCH para descripciones)
+
+
         
         rows = c.fetchall()
         conn.close()
@@ -331,13 +335,15 @@ def get_ofertas():
         ofertas = []
         for r in rows:
             ofertas.append({
-<<<<<<< HEAD
+
+
                 "id": r[0], "nombre": r[1], "precio": r[2], "link": r[3], "imagen": r[4],
                 "categoria": r[5], "descripcion": str(r[6]) if r[6] else "",
                 "activo": bool(r[7]) if r[7] is not None else True,
                 "fecha_creacion": str(r[8]) if r[8] else None,
                 "votos_calientes": r[9], "votos_frios": r[10]
-=======
+
+
                 "id": r[0],
                 "nombre": r[1],
                 "precio": r[2],
@@ -347,7 +353,8 @@ def get_ofertas():
                 "descripcion": str(r[6]) if len(r) > 6 and r[6] is not None else "",
                 "activo": bool(r[7]) if len(r) > 7 else True,
                 "fecha_creacion": str(r[8]) if len(r) > 8 else None
->>>>>>> 083f8c7 (Añadir ruta PATCH para descripciones)
+
+
             })
             
         return jsonify({
@@ -364,7 +371,8 @@ def get_ofertas():
         logger.error(f"❌ Error get_ofertas: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-<<<<<<< HEAD
+
+
 @app.route("/api/ofertas/<int:id>/activo", methods=["PATCH", "OPTIONS"])
 @requiere_api_key
 def update_activo(id):
@@ -379,7 +387,7 @@ def update_activo(id):
         conn.commit()
         conn.close()
         return jsonify({"status": "ok", "activo": data.get("activo", False)})
-=======
+
 # ✅ ACTUALIZAR ESTADO ACTIVO/INACTIVO - ✅ RUTA CORREGIDA
 @app.route("/api/ofertas/<int:id>/activo", methods=["PATCH"])
 def update_activo(id):
@@ -400,12 +408,14 @@ def update_activo(id):
         conn.close()
         
         return jsonify({"status": "ok", "activo": activo})
->>>>>>> 083f8c7 (Añadir ruta PATCH para descripciones)
+
+
     except Exception as e:
         logger.error(f"❌ Error update_activo: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-<<<<<<< HEAD
+
+
 @app.route("/api/ofertas/<int:id>", methods=["PATCH", "OPTIONS"])
 @requiere_api_key
 def update_descripcion(id):
@@ -419,7 +429,7 @@ def update_descripcion(id):
             c.execute("UPDATE ofertas SET descripcion=%s WHERE id=%s", (data["descripcion"], id))
             conn.commit()
             conn.close()
-=======
+
 # ✅ NUEVA RUTA: ACTUALIZAR DESCRIPCIÓN (para migración)
 @app.route("/api/ofertas/<int:id>", methods=["PATCH"])
 def update_descripcion(id):
@@ -440,19 +450,22 @@ def update_descripcion(id):
             logger.info(f"✅ Descripción actualizada para producto {id}")
         
         conn.close()
->>>>>>> 083f8c7 (Añadir ruta PATCH para descripciones)
+
+
         return jsonify({"status": "ok"})
     except Exception as e:
         logger.error(f"❌ Error update_descripcion: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-<<<<<<< HEAD
+
+
 @app.route("/api/ofertas/<int:id>", methods=["DELETE", "OPTIONS"])
 @requiere_api_key
-=======
+
 # ✅ ELIMINAR OFERTA
 @app.route("/api/ofertas/<int:id>", methods=["DELETE"])
->>>>>>> 083f8c7 (Añadir ruta PATCH para descripciones)
+
+
 def delete_oferta(id):
     if request.method == "OPTIONS":
         return jsonify({"status": "ok"}), 200
@@ -467,16 +480,19 @@ def delete_oferta(id):
         logger.error(f"❌ Error delete_oferta: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-<<<<<<< HEAD
-=======
+
+
+
 # ✅ OBTENER ESTADÍSTICAS
->>>>>>> 083f8c7 (Añadir ruta PATCH para descripciones)
+
+
 @app.route("/api/estadisticas", methods=["GET"])
 def get_estadisticas():
     try:
         conn = conectar()
         c = conn.cursor()
-<<<<<<< HEAD
+
+
         c.execute("SELECT COUNT(*) FROM ofertas")
         total = c.fetchone()[0]
         c.execute("SELECT COUNT(*) FROM ofertas WHERE activo=TRUE")
@@ -485,7 +501,7 @@ def get_estadisticas():
         inactivos = c.fetchone()[0]
         conn.close()
         return jsonify({"total": total, "activos": activos, "inactivos": inactivos})
-=======
+
         
         c.execute("SELECT COUNT(*) FROM ofertas")
         total = c.fetchone()[0]
@@ -503,12 +519,14 @@ def get_estadisticas():
             "activos": activos,
             "inactivos": inactivos
         })
->>>>>>> 083f8c7 (Añadir ruta PATCH para descripciones)
+
+
     except Exception as e:
         logger.error(f"❌ Error get_estadisticas: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-<<<<<<< HEAD
+
+
 # ==================== RUTAS COMUNIDAD: VOTOS Y COMENTARIOS ====================
 
 @app.route("/api/ofertas/<int:id>/voto", methods=["POST", "OPTIONS"])
@@ -570,8 +588,8 @@ def add_comentario(id):
         logger.error(f"❌ Error add_comentario: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-=======
->>>>>>> 083f8c7 (Añadir ruta PATCH para descripciones)
+
+
 # ==================== RUN APP ====================
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
