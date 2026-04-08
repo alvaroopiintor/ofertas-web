@@ -1318,6 +1318,7 @@
         }
         
         /* ==================== RELATED PRODUCTS - CAROUSEL ==================== */
+        /* ==================== RELATED PRODUCTS - CAROUSEL ==================== */
         .related-section {
             background: var(--bg-color);
             border-radius: 15px;
@@ -1339,39 +1340,70 @@
         }
 
         .related-carousel {
-    display: flex;
-    align-items: center;
-    position: relative;
-    overflow: hidden; /* Para que el grid no se salga */
-}
-.related-grid {
-    display: flex; /* Cambia de grid a flex para que la flecha funcione como scroll */
-    overflow-x: auto;
-    scroll-behavior: smooth;
-    gap: 20px;
-}
-.related-grid::-webkit-scrollbar { display: none; } /* Ocultar barra scroll */
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden; /* Evita que el contenido se salga de la caja */
+            padding: 10px 0; /* Un poco de aire arriba y abajo para las sombras */
+        }
+
+        .related-grid {
+            display: flex; /* Cambiamos a Flexbox para el carrusel */
+            gap: 20px;
+            overflow-x: auto; /* Permite scroll horizontal si hay muchos */
+            scroll-behavior: smooth;
+            width: 100%;
+        }
+
+        /* Ocultar barra de scroll nativa para que quede limpio */
+        .related-grid::-webkit-scrollbar { 
+            display: none; 
+        }
+
+        /* MAGIA: Forzamos a que todas las tarjetas midan exactamente lo mismo */
+        .related-grid .product-card {
+            flex: 0 0 calc(33.333% - 14px); /* 3 tarjetas por fila, restando el gap */
+            min-width: 250px; /* Tamaño mínimo en móviles */
+            display: flex;
+            flex-direction: column; /* Para que el botón de Amazon se quede abajo */
+            height: auto; /* Se ajustarán a la tarjeta más alta de la fila */
+        }
+        
+        .related-grid .product-card-content {
+            flex: 1; /* Esto empuja el botón hacia abajo si el título es corto */
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .related-grid .product-card-image {
+             height: 200px; /* Forzamos a que todas las cajas de imagen sean iguales */
+        }
 
         .next-related-btn {
-            background: var(--primary-color);
-            color: #fff;
-            border: none;
+            position: absolute;
+            right: -15px; /* Sacarla un poco para que se vea bien */
+            top: 50%;
+            transform: translateY(-50%);
+            background: white;
+            color: var(--text-color);
+            border: 1px solid #ddd;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            width: 45px;
+            height: 45px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 18px;
             cursor: pointer;
             transition: all 0.2s;
-            box-shadow: var(--shadow);
-            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            z-index: 10;
         }
 
         .next-related-btn:hover {
-            background: var(--primary-hover);
-            transform: scale(1.1);
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-50%) scale(1.1);
         }
 
         @keyframes slideInRight {
@@ -1388,27 +1420,14 @@
         .carousel-animate .product-card:nth-child(2) { animation-delay: 0.1s; }
         .carousel-animate .product-card:nth-child(3) { animation-delay: 0.2s; }
         
-        .back-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 25px;
-            background: var(--bg-color);
-            border: 2px solid var(--border-color);
-            border-radius: 25px;
-            color: var(--text-color);
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s;
-            margin-bottom: 20px;
-            text-decoration: none;
-        }
-        
-        .back-btn:hover {
-            background: var(--primary-color);
-            border-color: var(--primary-color);
-            color: #fff;
+        /* Ajuste para móviles */
+        @media (max-width: 768px) {
+            .related-grid .product-card {
+                flex: 0 0 calc(100% - 20px); /* 1 tarjeta por fila en móviles */
+            }
+            .next-related-btn {
+                display: none !important; /* Ocultamos la flecha en móvil, se mueve con el dedo */
+            }
         }
         
         /* ==================== MAIN LAYOUT ==================== */
@@ -3237,6 +3256,21 @@
                 
                 voteSection.appendChild(voteBtnHot);
                 voteSection.appendChild(voteBtnCold);
+                
+                // --- NUEVO BOTÓN DE COMPARTIR (A LA DERECHA) ---
+                const shareBtn = document.createElement('button');
+                shareBtn.className = 'share-icon-btn';
+                shareBtn.style.marginLeft = 'auto'; // Esto es la magia que lo empuja a la derecha del todo
+                shareBtn.innerHTML = '<i class="fas fa-share-alt" style="font-size: 1.2em; color: var(--text-muted);"></i>';
+                shareBtn.title = 'Compartir';
+                shareBtn.onclick = (e) => {
+                    e.stopPropagation(); // Evita que se abra el producto al hacer clic aquí
+                    currentProduct = producto; // Asegura que compartimos el producto exacto
+                    compartirProductoAvanzada(producto.id);
+                };
+                voteSection.appendChild(shareBtn);
+                // ----------------------------------------------
+
                 contentDiv.appendChild(voteSection);
                 
                 const timestamp = document.createElement('div');
@@ -3517,30 +3551,29 @@ async function compartirProductoAvanzada(productId = null) {
 
     if (!productToShare) return;
 
-    // URL del producto (limpia, sin parámetros extra de Amazon si es posible)
-    const productUrl = productId 
-        ? `https://spainlinks.com/producto/${productId}`
-        : window.location.href;
+    // 1. Forzamos la URL exacta y limpia para el SEO
+    const productUrl = `https://spainlinks.com/producto/${productToShare.id}`;
 
-    const shareData = {
-        title: productToShare.nombre,
-        text: `🔥 ¡CHOLAZO! ${productToShare.nombre}\n💰 Solo por ${productToShare.precio}\n📝 ${productToShare.descripcion ? productToShare.descripcion.substring(0, 100) + '...' : ''}\n\nMíralo aquí:`,
-        url: productUrl
-    };
+    // 2. Texto muy simple. Dejamos que la "tarjeta SEO" haga el trabajo visual.
+    // Usamos doble salto de línea (\n\n) para separar bien el enlace del texto.
+    const textoMensaje = `🔥 ¡Mira este chollo por ${productToShare.precio}!\n\n${productUrl}`;
 
-    // Intentar usar la API nativa (Móvil/Safari)
+    // Usamos la API nativa si estamos en móvil
     if (navigator.share) {
         try {
-            await navigator.share(shareData);
-            console.log('Compartido con éxito');
+            // Pasamos solo el texto (que ya incluye la URL al final)
+            // Esto evita que WhatsApp junte mal los campos.
+            await navigator.share({
+                title: productToShare.nombre,
+                text: textoMensaje
+            });
         } catch (err) {
-            console.log('Error al compartir o cancelado', err);
+            console.log('Compartir cancelado por el usuario');
         }
     } else {
-        // Fallback: Copiar al portapapeles
-        const textToCopy = `${shareData.text} ${shareData.url}`;
-        navigator.clipboard.writeText(textToCopy).then(() => {
-            alert('¡Enlace y descripción copiados al portapapeles! Ya puedes pegarlo donde quieras.');
+        // Fallback: Copiar al portapapeles en PC
+        navigator.clipboard.writeText(textoMensaje).then(() => {
+            alert('¡Enlace copiado!\n\n💡 TRUCO: Al pegarlo en WhatsApp, espera 2 segundos antes de darle a enviar para que aparezca la foto del producto.');
         });
     }
 }
