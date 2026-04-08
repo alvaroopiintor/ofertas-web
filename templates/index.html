@@ -13,10 +13,12 @@
     <meta property="og:description" content="{{ meta.description if meta else 'Las mejores ofertas de Amazon en tiempo real. Descuentos en tecnología, hogar, moda y más.' }}">
     <meta property="og:image" content="{{ meta.image if meta else 'URL_DE_TU_LOGO_POR_DEFECTO.png' }}"> <meta property="og:url" content="{{ meta.url if meta else 'https://tudominio.com/' }}">
     
-    <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="shortcut icon" type="image/png" href="favicon.png">
-    <link rel="apple-touch-icon" href="favicon.png">
+  <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="shortcut icon" type="image/png" href="/static/favicon.png">
+    <link rel="apple-touch-icon" href="/static/favicon.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+
     
     <script>
         (function() {
@@ -1652,7 +1654,7 @@
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <a href="#" class="header-logo" onclick="showHome(event); toggleSidebar()">
-                <img src="logo.png" alt="SPAIN LINKS" onerror="this.style.display='none'">
+                <img src="/static/logo.png" alt="SPAIN LINKS"> onerror="this.style.display='none'">
                 <span class="header-logo-text">SPAIN <span>LINKS</span></span>
             </a>
         </div>
