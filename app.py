@@ -27,7 +27,6 @@ CORS(app, resources={r"/*": {
     "origins": DOMINIOS_PERMITIDOS,
     "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     "allow_headers": ["Content-Type", "X-API-KEY"],
-    "supports_credentials": False
 }})
 
 # ==================== SEGURIDAD API ====================
