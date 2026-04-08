@@ -1339,17 +1339,18 @@
         }
 
         .related-carousel {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .related-grid {
-            flex: 1;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-        }
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden; /* Para que el grid no se salga */
+}
+.related-grid {
+    display: flex; /* Cambia de grid a flex para que la flecha funcione como scroll */
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    gap: 20px;
+}
+.related-grid::-webkit-scrollbar { display: none; } /* Ocultar barra scroll */
 
         .next-related-btn {
             background: var(--primary-color);
@@ -1665,6 +1666,103 @@
         .pulse-animation {
             animation: pulse 2s infinite;
         }
+
+    /* --- ESTILOS PARA PRECIOS Y DESCUENTOS (PORTADA) --- */
+.price-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.old-price {
+    text-decoration: line-through;
+    color: #888;
+    font-size: 0.9em;
+}
+
+.discount-badge {
+    background-color: #cc0c39; /* Rojo Amazon */
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+/* --- ESTILOS PARA COMPARTIR EN PORTADA --- */
+.card-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    border-top: 1px solid var(--border-color);
+}
+
+.share-icon-btn {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    font-size: 1.1em;
+    padding: 5px;
+    transition: color 0.2s;
+}
+
+.share-icon-btn:hover {
+    color: var(--primary-color);
+}
+
+/* --- ESTILOS PARA COMPARTIR EN DETALLE (arriba descripción) --- */
+.detail-share-container {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.share-btn-detail {
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    color: var(--text-color);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9em;
+}
+
+.share-btn-detail:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* --- CORRECCIÓN FLECHA RELACIONADOS --- */
+.related-carousel {
+    position: relative; /* Importante para posicionar la flecha */
+}
+
+.next-related-btn {
+    position: absolute;
+    right: -20px; /* Sacarla un poco */
+    top: 50%;
+    transform: translateY(-50%);
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex; /* Asegurar que se vea */
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    z-index: 10;
+    color: var(--text-color);
+}
+
     </style>
 </head>
 <body>
@@ -2589,13 +2687,17 @@
         }
 
         function nextRelatedProducts() {
-            relatedProductsIndex += RELATED_PER_PAGE;
-            // Si pasamos el final, volvemos a empezar
-            if (relatedProductsIndex >= relatedProductsList.length) {
-                relatedProductsIndex = 0;
-            }
-            updateRelatedGrid();
-        }
+    const grid = document.getElementById('detailRelatedGrid');
+    // Desplazamos el scroll del contenedor hacia la derecha
+    grid.scrollBy({ left: 300, behavior: 'smooth' });
+    
+    // Si queremos que sea infinito o circular con tu lógica de array:
+    relatedProductsIndex += 1;
+    if (relatedProductsIndex >= relatedProductsList.length) {
+        relatedProductsIndex = 0;
+        grid.scrollTo({ left: 0, behavior: 'smooth' });
+    }
+}
 
         // ==================== SHOW HOME ====================
         function showHome(event) {
@@ -3156,6 +3258,94 @@
             });
         }
 
+
+
+
+function renderProductDetail(p) {
+    currentProduct = p;
+    document.getElementById('detailImage').src = p.imagen;
+    document.getElementById('detailTitle').textContent = p.nombre;
+    document.getElementById('detailPrice').textContent = p.precio;
+    document.getElementById('detailAmazonLink').href = p.link;
+    document.getElementById('detailCategory').textContent = p.categoria || 'General';
+    
+    // Precios y descuentos
+    const oldPriceEl = document.getElementById('detailOldPrice');
+    const discEl = document.getElementById('detailDiscount');
+    let desc = calculateDiscount(p.precio, p.precioAntes);
+    
+    if(p.precioAntes) {
+        oldPriceEl.textContent = p.precioAntes;
+        oldPriceEl.style.display = 'inline';
+        discEl.textContent = `-${desc}%`;
+        discEl.style.display = 'inline';
+    } else {
+        oldPriceEl.style.display = 'none';
+        discEl.style.display = 'none';
+    }
+
+    // INSERTAR COMPARTIR ARRIBA DE LA DESCRIPCIÓN
+    const descContent = document.getElementById('detailDescriptionContent');
+    descContent.innerHTML = `
+        <div class="detail-share-container">
+            <button class="share-btn-detail" onclick="compartirProductoAvanzada()">
+                <i class="fas fa-share-alt"></i> Compartir este chollo con amigos
+            </button>
+        </div>
+        <p>${p.descripcion || 'Sin descripción disponible.'}</p>
+    `;
+    
+    // Actualizar votos
+    document.getElementById('detailVoteHotCount').textContent = p.votosHot || 0;
+    document.getElementById('detailVoteColdCount').textContent = p.votosCold || 0;
+}
+
+
+
+function createProductCard(p) {
+    let discountHtml = '';
+    // Intentamos calcular el descuento si existen ambos precios
+    if (p.precioAntes && p.precio !== p.precioAntes) {
+        let current = extractPrice(p.precio);
+        let old = extractPrice(p.precioAntes);
+        if (old > current) {
+            let pct = Math.round(((old - current) / old) * 100);
+            discountHtml = `
+                <span class="old-price">${p.precioAntes}</span>
+                <span class="discount-badge">-${pct}%</span>
+            `;
+        }
+    }
+
+    // Usamos el ID del producto para que al pinchar en la imagen o título se abra el detalle
+    return `
+        <div class="product-card">
+            <div class="product-card-image" onclick="showProductDetailPageById(${p.id})">
+                <img src="${p.imagen}" alt="${p.nombre}" onerror="this.src='/static/logo.png'">
+                ${discountHtml ? `<span class="discount-badge" style="position:absolute; bottom:10px; left:10px;">${discountHtml.split('</span>')[1]}</span>` : ''}
+            </div>
+            <div class="product-card-content">
+                <h3 class="product-title" onclick="showProductDetailPageById(${p.id})" style="cursor:pointer">${p.nombre}</h3>
+                <div class="price-container">
+                    <span class="price">${p.precio}</span>
+                    ${discountHtml ? discountHtml.split('</span>')[0] + '</span>' : ''}
+                </div>
+                <div class="card-actions" style="border:none; padding:10px 0;">
+                    <div class="vote-section" style="border:none; margin:0; padding:0;">
+                         <button class="vote-btn hot" onclick="handleVoteById(${p.id}, 'hot')">
+                            <i class="fas fa-fire"></i> <span>${p.votosHot || 0}</span>
+                        </button>
+                    </div>
+                    <button class="share-icon-btn" onclick="compartirProductoAvanzada(${p.id})" title="Compartir">
+                        <i class="fas fa-share-alt"></i>
+                    </button>
+                </div>
+                <a href="${p.link}" target="_blank" class="amazon-btn">Ver Oferta</a>
+            </div>
+        </div>
+    `;
+}
+
         async function handleVote(producto, voteType, hotBtn, coldBtn) {
             // Evitar doble clic
             hotBtn.style.pointerEvents = 'none';
@@ -3309,6 +3499,51 @@
                 catSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         }
+
+
+async function compartirProductoAvanzada(productId = null) {
+    let productToShare = currentProduct;
+
+    // Si nos pasan un ID (desde la portada), buscamos ese producto
+    if (productId && (!currentProduct || currentProduct.id !== productId)) {
+        try {
+            const resp = await fetch(`${API_BASE}/${productId}`);
+            productToShare = await resp.json();
+        } catch (e) {
+            console.error("Error obteniendo producto para compartir", e);
+            return;
+        }
+    }
+
+    if (!productToShare) return;
+
+    // URL del producto (limpia, sin parámetros extra de Amazon si es posible)
+    const productUrl = productId 
+        ? `https://spainlinks.com/producto/${productId}`
+        : window.location.href;
+
+    const shareData = {
+        title: productToShare.nombre,
+        text: `🔥 ¡CHOLAZO! ${productToShare.nombre}\n💰 Solo por ${productToShare.precio}\n📝 ${productToShare.descripcion ? productToShare.descripcion.substring(0, 100) + '...' : ''}\n\nMíralo aquí:`,
+        url: productUrl
+    };
+
+    // Intentar usar la API nativa (Móvil/Safari)
+    if (navigator.share) {
+        try {
+            await navigator.share(shareData);
+            console.log('Compartido con éxito');
+        } catch (err) {
+            console.log('Error al compartir o cancelado', err);
+        }
+    } else {
+        // Fallback: Copiar al portapapeles
+        const textToCopy = `${shareData.text} ${shareData.url}`;
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            alert('¡Enlace y descripción copiados al portapapeles! Ya puedes pegarlo donde quieras.');
+        });
+    }
+}
 
     </script>
 </body>
