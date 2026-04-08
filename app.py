@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 # ==================== INICIALIZAR FLASK ====================
 app = Flask(__name__)
 
-# ==================== CONFIGURAR CORS (CORREGIDO PARA PREFLIGHT) ====================
+# ==================== CONFIGURAR CORS (CORREGIDO) ====================
 CORS(app, resources={r"/*": {
     "origins": ["*"],
     "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -77,7 +77,7 @@ def init_db():
         c.execute("SELECT column_name FROM information_schema.columns WHERE table_name='ofertas'")
         columnas_existentes = [row[0] for row in c.fetchall()]
         
-        # ✅ Añadir columnas faltantes de forma segura
+        # ✅ Añadir columnas faltantes
         columnas_a_anadir = [
             ('descripcion', "ALTER TABLE ofertas ADD COLUMN descripcion TEXT"),
             ('activo', "ALTER TABLE ofertas ADD COLUMN activo BOOLEAN DEFAULT TRUE"),
