@@ -28,7 +28,6 @@
                 document.documentElement.classList.add('dark-mode');
             }
         })();
-    </script>
     
     <style>
         /* ==================== RESET & BASE ==================== */
@@ -3563,6 +3562,14 @@ async function compartirProductoAvanzada(productId = null) {
         });
     }
 }
+
+// ==================== HELPER PARA ABRIR PRODUCTOS POR ID ====================
+        function showProductDetailPageById(id) {
+            const producto = allProducts.find(p => p.id === id);
+            if (producto) {
+                showProductDetailPage(producto);
+            }
+        }
 
     </script>
 </body>
