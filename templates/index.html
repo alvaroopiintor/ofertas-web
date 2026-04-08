@@ -1429,6 +1429,30 @@
                 display: none !important; /* Ocultamos la flecha en móvil, se mueve con el dedo */
             }
         }
+
+/* ==================== BOTÓN VOLVER ==================== */
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 25px;
+    background: var(--bg-color);
+    border: 2px solid var(--border-color);
+    border-radius: 25px;
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    margin-bottom: 20px;
+    text-decoration: none;
+}
+
+.back-btn:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+}
         
         /* ==================== MAIN LAYOUT ==================== */
         .main-layout {
@@ -1687,26 +1711,39 @@
         }
 
     /* --- ESTILOS PARA PRECIOS Y DESCUENTOS (PORTADA) --- */
+/* --- ESTILOS DE PRECIO EXACTOS (DISEÑO VERDE) --- */
 .price-container {
     display: flex;
-    align-items: center;
+    align-items: baseline; /* Esto alinea los números por la base de la letra */
     gap: 8px;
-    margin-top: 5px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
 }
 
-.old-price {
+.price-container .price {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--primary-color);
+    line-height: 1;
+}
+
+.price-container .old-price {
     text-decoration: line-through;
-    color: #888;
-    font-size: 0.9em;
+    color: #888888;
+    font-size: 1.1rem;
+    font-weight: 600;
 }
 
-.discount-badge {
-    background-color: #cc0c39; /* Rojo Amazon */
-    color: white;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.8em;
-    font-weight: bold;
+/* Esta es la etiqueta verde de la foto */
+.inline-discount {
+    background-color: #edf7ed; 
+    color: #2e7d32; 
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
 }
 
 /* --- ESTILOS PARA COMPARTIR EN PORTADA --- */
@@ -1982,7 +2019,12 @@
                                 <img id="detailImage" src="" alt="Producto">
                             </div>
                             <div class="product-detail-info-container">
-                                <span class="product-detail-category" id="detailCategory">Categoría</span>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                    <span class="product-detail-category" id="detailCategory" style="margin-bottom: 0;">Categoría</span>
+                                    <button class="share-btn-detail" onclick="compartirProductoAvanzada()" style="margin: 0;">
+                                        <i class="fas fa-share-alt"></i> Compartir
+                                    </button>
+                                </div>
                                 <h1 class="product-detail-title" id="detailTitle">Nombre del Producto</h1>
                                 
                                 <div class="product-detail-price-section">
@@ -2124,19 +2166,11 @@
             </button>
         </div>
 
-        <div id="storesSection" class="blog-section" style="display:none;">
-            <h2><i class="fas fa-store"></i> Tiendas Populares</h2>
-            <div class="sidebar-widget">
-                <ul class="category-list">
-                    <li><a href="#" onclick="setCategory('tecnologia')">Amazon <span class="category-count">120</span></a></li>
-                    <li><a href="#" onclick="setCategory('hogar')">MediaMarkt <span class="category-count">45</span></a></li>
-                    <li><a href="#" onclick="setCategory('moda')">Zalando <span class="category-count">38</span></a></li>
-                    <li><a href="#" onclick="setCategory('deportes')">Decathlon <span class="category-count">32</span></a></li>
-                    <li><a href="#" onclick="setCategory('belleza')">Primor <span class="category-count">28</span></a></li>
-                </ul>
-            </div>
+      <div class="product-detail-actions">
+            <button class="share-btn" onclick="compartirProducto()">
+                <i class="fas fa-share-alt"></i> Compartir
+            </button>
         </div>
-    </div>
 
     <footer>
         <div class="container">
@@ -2655,66 +2689,69 @@
         }
 
         function updateRelatedGrid() {
-            const relatedGrid = document.getElementById('detailRelatedGrid');
-            const nextBtn = document.getElementById('nextRelatedBtn');
-            
-            if (!relatedGrid) return;
-            
-            if (relatedProductsList.length === 0) {
-                relatedGrid.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">No hay ofertas relacionadas en esta categoría</p>';
-                if (nextBtn) nextBtn.style.display = 'none';
-                return;
-            }
-            
-            // Reiniciar animación quitando y añadiendo la clase
-            relatedGrid.classList.remove('carousel-animate');
-            void relatedGrid.offsetWidth; // Truco para forzar reflow
-            relatedGrid.classList.add('carousel-animate');
-            
-            const visibleProducts = relatedProductsList.slice(relatedProductsIndex, relatedProductsIndex + RELATED_PER_PAGE);
-            
-            relatedGrid.innerHTML = visibleProducts.map(p => {
-                const descuento = calculateDiscount(p.precio, p.precioAntes);
-                const votosNetos = (p.votosHot || 0) - (p.votosCold || 0);
-                return `
-                    <div class="product-card" onclick="showProductDetailPage(${JSON.stringify(p).replace(/"/g, '&quot;')})">
-                        <div class="product-card-image">
-                            <img src="${sanitizeURL(p.imagen) || 'https://via.placeholder.com/300x200?text=Producto'}" alt="${p.nombre}" loading="lazy">
-                            ${descuento > 0 ? `<span class="discount-badge">-${descuento}%</span>` : ''}
-                            <div class="temperature-badge ${getTemperatureClass(descuento)}">${votosNetos}°</div>
-                        </div>
-                        <div class="product-card-content">
-                            <span class="store-badge">${p.categoria || 'General'}</span>
-                            <h3>${sanitizeHTML(p.nombre || 'Producto')}</h3>
-                            <div class="price-container">
-                                <span class="price">${p.precio || ''}</span>
-                            </div>
-                            <a href="${sanitizeURL(p.link) || '#'}" target="_blank" class="amazon-btn" onclick="event.stopPropagation()">Ver Oferta →</a>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            // Controlamos si se muestra el botón de Siguiente
-            if (nextBtn) {
-                if (relatedProductsList.length <= RELATED_PER_PAGE) {
-                    nextBtn.style.display = 'none';
-                } else {
-                    nextBtn.style.display = 'flex';
-                }
-            }
-        }
-
-        function nextRelatedProducts() {
-    const grid = document.getElementById('detailRelatedGrid');
-    // Desplazamos el scroll del contenedor hacia la derecha
-    grid.scrollBy({ left: 300, behavior: 'smooth' });
+    const relatedGrid = document.getElementById('detailRelatedGrid');
+    const nextBtn = document.getElementById('nextRelatedBtn');
     
-    // Si queremos que sea infinito o circular con tu lógica de array:
-    relatedProductsIndex += 1;
-    if (relatedProductsIndex >= relatedProductsList.length) {
-        relatedProductsIndex = 0;
+    if (!relatedGrid) return;
+    
+    if (relatedProductsList.length === 0) {
+        relatedGrid.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">No hay ofertas relacionadas en esta categoría</p>';
+        if (nextBtn) nextBtn.style.display = 'none';
+        return;
+    }
+    
+    // Animación inicial
+    relatedGrid.classList.remove('carousel-animate');
+    void relatedGrid.offsetWidth;
+    relatedGrid.classList.add('carousel-animate');
+    
+    // DIBUJAMOS TODOS LOS PRODUCTOS RELACIONADOS (Sin limitarlo a 3)
+    relatedGrid.innerHTML = relatedProductsList.map(p => {
+        const descuento = calculateDiscount(p.precio, p.precioAntes);
+        const votosNetos = (p.votosHot || 0) - (p.votosCold || 0);
+        return `
+            <div class="product-card" onclick="showProductDetailPageById(${p.id})">
+                <div class="product-card-image">
+                    <img src="${sanitizeURL(p.imagen) || 'https://via.placeholder.com/300x200?text=Producto'}" alt="${p.nombre}" loading="lazy">
+                    ${descuento > 0 ? `<span class="discount-badge" style="position:absolute; bottom:10px; left:10px;">-${descuento}%</span>` : ''}
+                    <div class="temperature-badge ${getTemperatureClass(descuento)}">${votosNetos}°</div>
+                </div>
+                <div class="product-card-content">
+                    <span class="store-badge">${p.categoria || 'General'}</span>
+                    <h3 style="cursor:pointer">${sanitizeHTML(p.nombre || 'Producto')}</h3>
+                   <div class="price-container">
+                        <span class="price">${p.precio || ''}</span>
+                        ${p.precioAntes && p.precioAntes !== p.precio ? `<span class="old-price">${p.precioAntes}</span><span class="inline-discount">-${descuento}%</span>` : ''}
+                    </div>
+                    <a href="${sanitizeURL(p.link) || '#'}" target="_blank" class="amazon-btn" onclick="event.stopPropagation()">Ver Oferta →</a>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Ocultar la flecha si hay 3 o menos productos (porque no hace falta scroll)
+    if (nextBtn) {
+        if (relatedProductsList.length <= 3) {
+            nextBtn.style.display = 'none';
+        } else {
+            nextBtn.style.display = 'flex';
+        }
+    }
+}
+
+       function nextRelatedProducts() {
+    const grid = document.getElementById('detailRelatedGrid');
+    if (!grid) return;
+
+    // Calculamos cuánto scroll hemos hecho y cuál es el máximo posible
+    const maxScroll = grid.scrollWidth - grid.clientWidth;
+    
+    // Si estamos al final del todo (o a punto), volvemos al principio
+    if (grid.scrollLeft >= maxScroll - 10) {
         grid.scrollTo({ left: 0, behavior: 'smooth' });
+    } else {
+        // Si no, avanzamos el tamaño de una tarjeta (aprox 320px)
+        grid.scrollBy({ left: 320, behavior: 'smooth' });
     }
 }
 
@@ -3216,22 +3253,32 @@
                 };
                 contentDiv.appendChild(title);
                 
+               // --- INICIO BLOQUE PRECIOS ---
                 const priceContainer = document.createElement('div');
                 priceContainer.className = 'price-container';
                 
-                const price = document.createElement('span');
-                price.className = 'price';
-                price.textContent = producto.precio || '';
-                priceContainer.appendChild(price);
+                const priceSpan = document.createElement('span');
+                priceSpan.className = 'price';
+                priceSpan.textContent = producto.precio || '';
+                priceContainer.appendChild(priceSpan);
                 
-                if (producto.precioAntes) {
-                    const oldPrice = document.createElement('span');
-                    oldPrice.className = 'old-price';
-                    oldPrice.textContent = producto.precioAntes;
-                    priceContainer.appendChild(oldPrice);
+                // Si hay precio anterior y es distinto al actual
+                if (producto.precioAntes && producto.precioAntes !== producto.precio) {
+                    const oldPriceSpan = document.createElement('span');
+                    oldPriceSpan.className = 'old-price';
+                    oldPriceSpan.textContent = producto.precioAntes;
+                    priceContainer.appendChild(oldPriceSpan);
+                    
+                    if (descuento > 0) {
+                        const inlineDiscount = document.createElement('span');
+                        inlineDiscount.className = 'inline-discount';
+                        inlineDiscount.textContent = `-${descuento}%`;
+                        priceContainer.appendChild(inlineDiscount);
+                    }
                 }
                 
                 contentDiv.appendChild(priceContainer);
+                // --- FIN BLOQUE PRECIOS ---
                 
                 const voteSection = document.createElement('div');
                 voteSection.className = 'vote-section';
@@ -3303,15 +3350,17 @@ function renderProductDetail(p) {
     document.getElementById('detailAmazonLink').href = p.link;
     document.getElementById('detailCategory').textContent = p.categoria || 'General';
     
-    // Precios y descuentos
+   // Precios y descuentos
     const oldPriceEl = document.getElementById('detailOldPrice');
     const discEl = document.getElementById('detailDiscount');
     let desc = calculateDiscount(p.precio, p.precioAntes);
     
-    if(p.precioAntes) {
+    if(p.precioAntes && p.precioAntes !== p.precio) {
         oldPriceEl.textContent = p.precioAntes;
         oldPriceEl.style.display = 'inline';
+        
         discEl.textContent = `-${desc}%`;
+        discEl.className = 'inline-discount'; // Le aplicamos la clase verde bonita
         discEl.style.display = 'inline';
     } else {
         oldPriceEl.style.display = 'none';
