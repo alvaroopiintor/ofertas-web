@@ -1153,6 +1153,24 @@
             border-radius: 10px;
             text-align: center;
         }
+
+
+
+        
+        .share-btn {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            color: var(--text-color);
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        .share-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
         
         /* ==================== COMMENTS SECTION ==================== */
         .comments-section {
@@ -1905,7 +1923,7 @@
                         </div>
                         <div class="related-carousel">
                             <div class="related-grid" id="detailRelatedGrid"></div>
-                            <button class="next-related-btn" onclick="nextRelatedProducts()" id="nextRelatedBtn" style="display: none;" title="Ver más ofertas">
+                            <button class="next-related-btn" onclick="nextRelatedProducts()" id="nextRelatedBtn">
                                 <i class="fas fa-chevron-right"></i>
                             </button>
                         </div>
@@ -1981,6 +1999,12 @@
             <h2><i class="fas fa-fire"></i> Ofertas Más Votadas</h2>
             <p>Las ofertas con más votos positivos de nuestra comunidad.</p>
             <div class="products-grid" id="hotProductsGrid"></div>
+        </div>
+
+        <div class="product-detail-actions">
+            <button class="share-btn" onclick="compartirProducto()">
+                <i class="fas fa-share-alt"></i> Compartir
+            </button>
         </div>
 
         <div id="storesSection" class="blog-section" style="display:none;">
@@ -2400,6 +2424,26 @@
             }
         }
 
+       
+        function compartirProducto() {
+            if (!currentProduct) return;
+    
+            const shareData = {
+                title: currentProduct.nombre,
+                text: 'Mira este chollo en SPAIN LINKS: ' + currentProduct.precio,
+                url: window.location.href
+            };
+
+            if (navigator.share) {
+                navigator.share(shareData);
+            } else {
+                // Si el navegador no soporta "share", copiamos al portapapeles
+                navigator.clipboard.writeText(window.location.href);
+                alert('¡Enlace copiado al portapapeles!');
+            }
+        }
+        
+
         // ==================== RENDER COMMENTS ====================
         // ✅ Busca renderDetailComments() y simplifícala:
         async function renderDetailComments(productId) {
@@ -2768,12 +2812,25 @@
         }
 
        function setCategory(category) {
-            currentCategory = category;
-            currentPage = 1; // Volver a la página 1 al cambiar de categoría
-            applyFiltersAndSort(); // Filtrar localmente sin llamar a la API
-            window.history.pushState(null, "", "/");
-            scrollToCategories();
-        }
+           currentCategory = category;
+           currentPage = 1; 
+    
+           // Actualizar botones del menú principal
+           document.querySelectorAll('.category-btn').forEach(btn => {
+               btn.classList.remove('active');
+               if(btn.dataset.category === category) btn.classList.add('active');
+           });
+
+           // Actualizar botones de la sidebar
+           document.querySelectorAll('.sidebar-sub-btn').forEach(btn => {
+               btn.style.color = ''; // Reset color
+               // Si el texto o ID coincide con la categoría, podrías darle un estilo:
+               if(btn.getAttribute('onclick').includes(category)) btn.style.color = 'var(--primary-color)';
+           });
+
+    applyFiltersAndSort(); 
+    window.history.pushState(null, "", "/");
+}
 
         function setSort(sort) {
             currentSort = sort;
