@@ -3337,6 +3337,7 @@ function renderProductDetail(p) {
     
     // Actualizar votos
     document.getElementById('detailVoteHotCount').textContent = p.votosHot || 0;
+    }
 
 
 
@@ -3478,19 +3479,6 @@ function createProductCard(p) {
                     </div>
                 </li>
             `).join('');
-        }
-
-        
-            const filtered = allProducts.filter(p => (p.nombre && p.nombre.toLowerCase().includes(query)) || (p.categoria && p.categoria.toLowerCase().includes(query)));
-            displayedProducts = filtered.slice(0, PRODUCTS_PER_PAGE);
-            renderProducts();
-            
-            const loadMoreBtn = document.getElementById('loadMoreBtn');
-            if (loadMoreBtn) {
-                loadMoreBtn.style.display = displayedProducts.length < filtered.length ? 'block' : 'none';
-            }
-            
-            logDebug(`🔍 Búsqueda: "${query}" - ${filtered.length} resultados`);
         }
 
         function refreshData() {
