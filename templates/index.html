@@ -11,7 +11,8 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="{{ meta.title if meta else 'SPAIN LINKS 🔥 Ofertas Amazon' }}">
     <meta property="og:description" content="{{ meta.description if meta else 'Las mejores ofertas de Amazon en tiempo real. Descuentos en tecnología, hogar, moda y más.' }}">
-    <meta property="og:image" content="{{ meta.image if meta else 'URL_DE_TU_LOGO_POR_DEFECTO.png' }}"> <meta property="og:url" content="{{ meta.url if meta else 'https://tudominio.com/' }}">
+    <meta property="og:image" content="{{ meta.image if meta else 'https://spainlinks.com/static/logo.png' }}"> 
+    <meta property="og:url" content="{{ meta.url if meta else 'https://tudominio.com/' }}">
     
   <link rel="icon" type="image/png" href="/static/favicon.png">
     <link rel="shortcut icon" type="image/png" href="/static/favicon.png">
@@ -1654,7 +1655,7 @@
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <a href="#" class="header-logo" onclick="showHome(event); toggleSidebar()">
-                <img src="/static/logo.png" alt="SPAIN LINKS" style="max-width: 150px; height: auto;"> onerror="this.style.display='none'">
+                <img src="/static/logo.png" alt="SPAIN LINKS" style="max-width: 150px; height: auto;">
                 <span class="header-logo-text">SPAIN <span>LINKS</span></span>
             </a>
         </div>
@@ -1759,7 +1760,7 @@
                     <i class="fas fa-bars"></i>
                 </button>
                 <a href="#" class="header-logo" onclick="showHome(event)">
-                    <img src="logo.png" alt="SPAIN LINKS" onerror="this.style.display='none'">
+                    <img src="/static/logo.png" alt="SPAIN LINKS">
                     <span class="header-logo-text">SPAIN <span>LINKS</span></span>
                 </a>
             </div>
@@ -2047,7 +2048,7 @@
 
     <script>
         // ==================== GLOBAL VARIABLES ====================
-        const API_BASE = 'https://ofertas-web.onrender.com/api/ofertas';
+        const API_BASE = 'https://spainlinks.com/api/ofertas';
         let currentCategory = 'all';
         let currentSort = 'default';
         let allProducts = [];
