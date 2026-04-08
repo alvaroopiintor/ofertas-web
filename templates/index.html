@@ -3245,6 +3245,15 @@
             if (emptyState) emptyState.style.display = 'none';
             if (errorState) errorState.style.display = 'block';
         }
+
+        function scrollToCategories() {
+            const catSection = document.getElementById('categoriesSection');
+            if (catSection) {
+                catSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
     </script>
 </body>
 </html>
+                                                               
