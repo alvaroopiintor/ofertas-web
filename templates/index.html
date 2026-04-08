@@ -2160,18 +2160,7 @@
             <div class="products-grid" id="hotProductsGrid"></div>
         </div>
 
-        <div class="product-detail-actions">
-            <button class="share-btn" onclick="compartirProducto()">
-                <i class="fas fa-share-alt"></i> Compartir
-            </button>
-        </div>
-
-      <div class="product-detail-actions">
-            <button class="share-btn" onclick="compartirProducto()">
-                <i class="fas fa-share-alt"></i> Compartir
-            </button>
-        </div>
-
+        
     <footer>
         <div class="container">
             <div class="footer-content">
@@ -2576,24 +2565,7 @@
         }
 
        
-        function compartirProducto() {
-            if (!currentProduct) return;
-    
-            const shareData = {
-                title: currentProduct.nombre,
-                text: 'Mira este chollo en SPAIN LINKS: ' + currentProduct.precio,
-                url: window.location.href
-            };
-
-            if (navigator.share) {
-                navigator.share(shareData);
-            } else {
-                // Si el navegador no soporta "share", copiamos al portapapeles
-                navigator.clipboard.writeText(window.location.href);
-                alert('¡Enlace copiado al portapapeles!');
-            }
-        }
-        
+               
 
         // ==================== RENDER COMMENTS ====================
         // ✅ Busca renderDetailComments() y simplifícala:
@@ -3154,15 +3126,7 @@
             });
         }
 
-        function loadMoreProducts() {
-            // 1. Aumentamos la página actual local
-            currentPage++;
-            
-            // 2. Volvemos a cortar el array y dibujar los productos
-            applyFiltersAndSort();
-            
-            logDebug(`✅ Mostrando página ${currentPage}`);
-        }
+     
 
         function renderProducts() {
             const grid = document.getElementById('productsGrid');
@@ -3367,21 +3331,12 @@ function renderProductDetail(p) {
         discEl.style.display = 'none';
     }
 
-    // INSERTAR COMPARTIR ARRIBA DE LA DESCRIPCIÓN
+    // INSERTAR DESCRIPCIÓN LIMPIA
     const descContent = document.getElementById('detailDescriptionContent');
-    descContent.innerHTML = `
-        <div class="detail-share-container">
-            <button class="share-btn-detail" onclick="compartirProductoAvanzada()">
-                <i class="fas fa-share-alt"></i> Compartir este chollo con amigos
-            </button>
-        </div>
-        <p>${p.descripcion || 'Sin descripción disponible.'}</p>
-    `;
+    descContent.innerHTML = `<p>${p.descripcion || 'Sin descripción disponible.'}</p>`;
     
     // Actualizar votos
     document.getElementById('detailVoteHotCount').textContent = p.votosHot || 0;
-    document.getElementById('detailVoteColdCount').textContent = p.votosCold || 0;
-}
 
 
 
@@ -3525,13 +3480,7 @@ function createProductCard(p) {
             `).join('');
         }
 
-        function searchProducts() {
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
-            if (!query) {
-                loadProducts();
-                return;
-            }
-            
+        
             const filtered = allProducts.filter(p => (p.nombre && p.nombre.toLowerCase().includes(query)) || (p.categoria && p.categoria.toLowerCase().includes(query)));
             displayedProducts = filtered.slice(0, PRODUCTS_PER_PAGE);
             renderProducts();
