@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template, abort
 from flask_cors import CORS
 import psycopg2
 import os
@@ -14,14 +14,63 @@ logger = logging.getLogger(__name__)
 # ==================== INICIALIZAR FLASK ====================
 app = Flask(__name__)
 
-# ==================== CONFIGURAR CORS (CORREGIDO) ====================
+
+# ==================== CONFIGURAR CORS (RESTRINGIDO) ====================
+DOMINIOS_PERMITIDOS = [
+    "https://www.spainlinks.com",
+    "https://spainlinks.com",  # SUSTITUYE ESTO POR TU URL REAL DE NETLIFY
+    "http://localhost:5500",              # Para Live Server de VSCode
+    "http://127.0.0.1:5500",              # Alternativa de Live Server
+    "http://localhost:3000"               # Por si usas otros servidores locales
+]
+
 CORS(app, resources={r"/*": {
-    "origins": ["*"],
+    "origins": DOMINIOS_PERMITIDOS,
     "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     "allow_headers": ["Content-Type", "X-API-KEY"],
     "expose_headers": ["Content-Type"],
     "supports_credentials": False
 }})
+
+
+
+# ==================== RUTAS PARA SEO Y NAVEGACIÓN ====================
+
+@app.route("/")
+def home():
+    # Renderiza la home normal
+    return render_template("index.html", meta=None)
+
+@app.route("/producto/<int:producto_id>")
+def seo_producto(producto_id):
+    try:
+        conn = conectar()
+        c = conn.cursor()
+        # Buscamos los datos básicos para las Meta Tags
+        c.execute("""
+            SELECT nombre, descripcion, imagen, precio 
+            FROM ofertas WHERE id = %s
+        """, (producto_id,))
+        row = c.fetchone()
+        conn.close()
+
+        if not row:
+            return render_template("index.html", meta=None), 404
+
+        # Preparamos los datos para el SEO
+        meta_data = {
+            "title": f"{row[0]} - Oferta en SPAIN LINKS",
+            "description": (row[1][:150] + "...") if row[1] else f"¡Consigue este producto por solo {row[3]}!",
+            "image": row[2],
+            "url": f"https://tudominio.com/producto/{producto_id}" # Cambia por tu dominio real
+        }
+
+        return render_template("index.html", meta=meta_data)
+    except Exception as e:
+        logger.error(f"Error en SEO: {e}")
+        return render_template("index.html", meta=None)
+
+
 
 # ==================== CLAVE SECRETA API ====================
 API_SECRET_KEY = os.environ.get("API_SECRET_KEY", "clave_desarrollo_local_123")
@@ -139,14 +188,14 @@ def get_ofertas():
     try:
         categoria = request.args.get("categoria")
         activos = request.args.get("activos", "true")
+        
+        # ✅ Paginación desde la DB
+        page = max(1, int(request.args.get("page", 1)))
+        limit = min(100, max(1, int(request.args.get("limit", 20))))
+        offset = (page - 1) * limit
+        
         conn = conectar()
         c = conn.cursor()
-        
-        base_query = """
-            SELECT id, nombre, precio, link, imagen, categoria, descripcion, activo, fecha_creacion,
-                   COALESCE(votos_calientes, 0), COALESCE(votos_frios, 0)
-            FROM ofertas 
-        """
         
         conditions = []
         params = []
@@ -155,12 +204,25 @@ def get_ofertas():
         if categoria:
             conditions.append("categoria=%s")
             params.append(categoria)
-        
+            
+        where_clause = ""
         if conditions:
-            base_query += " WHERE " + " AND ".join(conditions)
-        base_query += " ORDER BY fecha_creacion DESC"
+            where_clause = "WHERE " + " AND ".join(conditions)
+            
+        # 1️⃣ Contar total para metadata
+        c.execute(f"SELECT COUNT(*) FROM ofertas {where_clause}", tuple(params))
+        total_items = c.fetchone()[0]
+        total_pages = (total_items + limit - 1) // limit
         
-        c.execute(base_query, tuple(params))
+        # 2️⃣ Obtener SOLO esta página
+        c.execute(f"""
+            SELECT id, nombre, precio, link, imagen, categoria, descripcion, activo, fecha_creacion,
+                   COALESCE(votos_calientes, 0), COALESCE(votos_frios, 0)
+            FROM ofertas {where_clause}
+            ORDER BY fecha_creacion DESC
+            LIMIT %s OFFSET %s
+        """, tuple(params) + (limit, offset))
+        
         rows = c.fetchall()
         conn.close()
         
@@ -173,7 +235,17 @@ def get_ofertas():
                 "fecha_creacion": str(r[8]) if r[8] else None,
                 "votos_calientes": r[9], "votos_frios": r[10]
             })
-        return jsonify(ofertas)
+            
+        return jsonify({
+            "ofertas": ofertas,
+            "pagination": {
+                "page": page,
+                "limit": limit,
+                "total": total_items,
+                "pages": total_pages,
+                "has_next": page < total_pages
+            }
+        })
     except Exception as e:
         logger.error(f"❌ Error get_ofertas: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
