@@ -2047,7 +2047,7 @@
 
     <script>
         // ==================== GLOBAL VARIABLES ====================
-        const API_BASE = 'https://spainlinks.com/api/ofertas';
+        const API_BASE = '/api/ofertas';
         let currentCategory = 'all';
         let currentSort = 'default';
         let allProducts = [];
@@ -3245,6 +3245,14 @@
             if (emptyState) emptyState.style.display = 'none';
             if (errorState) errorState.style.display = 'block';
         }
+
+        function scrollToCategories() {
+            const catSection = document.getElementById('categoriesSection');
+            if (catSection) {
+                catSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
     </script>
 </body>
 </html>
