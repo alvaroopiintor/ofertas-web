@@ -2056,6 +2056,8 @@
         const PRODUCTS_PER_PAGE = 20;
         let currentProduct = null;
         let productsLoaded = false;
+        let currentCommentPage = 1;
+        let totalComments = 0;
         
         let relatedProductsList = [];
         let relatedProductsIndex = 0;
@@ -2246,8 +2248,9 @@
             // Descripción
             renderDetailDescription(producto);
             
-            // Comentarios
-            renderDetailComments(producto.id);
+            // Comentarios (carga inicial)
+            currentCommentPage = 1;
+            renderDetailComments(producto.id, true); // true indica que es una carga desde cero
             
             // Productos relacionados (Nuevo Carrusel)
             renderDetailRelated(producto);
@@ -2401,48 +2404,79 @@
         }
 
         // ==================== RENDER COMMENTS ====================
-        // ✅ Busca renderDetailComments() y simplifícala:
-        async function renderDetailComments(productId) {
-            const comments = await getProductComments(productId);
-            renderDetailCommentsFromAPI(productId, comments);
+        async function renderDetailComments(productId, reset = false) {
+    const list = document.getElementById('detailCommentsList');
+    
+    // Si reseteamos, limpiamos la lista y mostramos un loader
+    if (reset) {
+        currentCommentPage = 1;
+        if (list) list.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Cargando comentarios...</div>';
+    }
+
+    const comments = await getProductComments(productId, currentCommentPage);
+    const countBadge = document.getElementById('detailCommentsCount');
+    
+    if (countBadge) countBadge.textContent = totalComments; // Usamos el total real de la BD
+
+    if (reset && comments.length === 0) {
+        if (list) {
+            list.innerHTML = '<div class="no-comments"><i class="fas fa-comment-slash"></i><p>Sé el primero en comentar sobre este producto</p></div>';
+        }
+        return;
+    }
+
+    const html = comments.map(c => {
+        const initial = c.username.charAt(0).toUpperCase();
+        const fecha = new Date(c.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        return `
+            <div class="comment-item">
+                <div class="comment-header">
+                    <div class="comment-author">
+                        <div class="comment-avatar">${initial}</div>
+                        <div>
+                            <div class="comment-username">${sanitizeHTML(c.username)}</div>
+                            <div class="comment-date">${fecha}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="comment-text">${sanitizeHTML(c.text)}</div>
+            </div>
+        `;
+    }).join('');
+
+    // Si es reset, sustituimos. Si no, adjuntamos al final.
+    if (list) {
+        if (reset) {
+            list.innerHTML = html;
+        } else {
+            // Quitamos el botón de "Cargar más" anterior si existía
+            const oldBtn = document.getElementById('loadMoreCommentsBtn');
+            if (oldBtn) oldBtn.remove();
+            list.insertAdjacentHTML('beforeend', html);
         }
 
-        // ==================== SUBMIT COMMENT ====================
-       // REEMPLAZA ESTA FUNCIÓN
-       async function submitDetailComment() {
-           if (!currentProduct) return;
+        // Si aún hay más comentarios por cargar, dibujamos el botón al final
+        const currentDisplayedCount = list.querySelectorAll('.comment-item').length;
+        if (currentDisplayedCount < totalComments) {
+            list.insertAdjacentHTML('beforeend', `
+                <button id="loadMoreCommentsBtn" class="load-more" onclick="loadMoreComments()" style="display: block; margin: 20px auto; width: 100%;">
+                    Ver más comentarios
+                </button>
+            `);
+        }
+    }
+}
+
+// Nueva función para el botón
+function loadMoreComments() {
+    if (!currentProduct) return;
+    currentCommentPage++;
     
-           const textInput = document.getElementById('detailCommentText');
-           const text = textInput.value.trim();
+    const btn = document.getElementById('loadMoreCommentsBtn');
+    if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando...';
     
-           if (!text) {
-               alert('Escribe un comentario');
-               return;
-           }
-
-           // --- NUEVO: Indicador visual de carga ---
-           const btn = document.querySelector('.comment-form button');
-           const originalText = btn.innerHTML;
-           btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publicando...';
-           btn.disabled = true;
-           btn.style.opacity = '0.7';
-
-           const username = getUserName();
-           const success = await addProductComment(currentProduct.id, username, text);
-
-           // --- NUEVO: Restaurar el botón ---
-           btn.innerHTML = originalText;
-           btn.disabled = false;
-           btn.style.opacity = '1';
-
-           if (success) {
-               textInput.value = ''; // Limpiar la caja
-               const comments = await getProductComments(currentProduct.id);
-               renderDetailCommentsFromAPI(currentProduct.id, comments);
-           } else {
-               alert('Error al publicar. El servidor podría estar reiniciándose, inténtalo en 10 segundos.');
-           }
-       }
+    renderDetailComments(currentProduct.id, false);
+}
 
         // ==================== RENDER RELATED PRODUCTS (CARRUSEL) ====================
 
@@ -2721,25 +2755,27 @@
             return votes[productId];
         }
 
-        async function getProductComments(productId) {
-            try {
-                const res = await fetch(`${API_BASE.replace('/api/ofertas', '')}/api/ofertas/${productId}/comentarios`);
-                if (!res.ok) throw new Error('Error cargando comentarios');
-                const comentarios = await res.json();
-        
-                // Mapear formato de la API al que usa tu UI
-                return comentarios.map(c => ({
-                    id: c.id,
-                    username: c.usuario || 'Anónimo',
-                    text: c.texto,
-                    date: c.fecha,
-                    votes: 0
-                }));
-            } catch (e) {
-                console.error("❌ Error cargando comentarios:", e);
-                return [];
-            }
-        }
+        async function getProductComments(productId, page = 1) {
+          try {
+              const res = await fetch(`${API_BASE.replace('/api/ofertas', '')}/api/ofertas/${productId}/comentarios?page=${page}&limit=10`);
+              if (!res.ok) throw new Error('Error cargando comentarios');
+              const data = await res.json();
+
+              // Actualizamos la variable global con el total
+              totalComments = data.total;
+
+              return data.comentarios.map(c => ({
+                  id: c.id,
+                  username: c.usuario || 'Anónimo',
+                  text: c.texto,
+                  date: c.fecha,
+                  votes: 0
+               }));
+           } catch (e) {
+              console.error("❌ Error cargando comentarios:", e);
+              return [];
+           }
+      }
       
 
         async function addProductComment(productId, username, text) {
