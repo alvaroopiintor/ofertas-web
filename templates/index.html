@@ -2058,6 +2058,7 @@
         let productsLoaded = false;
         let currentCommentPage = 1;
         let totalComments = 0;
+        let currentSearch = '';
         
         let relatedProductsList = [];
         let relatedProductsIndex = 0;
@@ -2804,130 +2805,88 @@ function loadMoreComments() {
         }
 
        function setCategory(category) {
-            currentCategory = category;
-            currentPage = 1; // Volver a la página 1 al cambiar de categoría
-            applyFiltersAndSort(); // Filtrar localmente sin llamar a la API
-            window.history.pushState(null, "", "/");
-            scrollToCategories();
-        }
+         currentCategory = category;
+         currentSearch = ''; // Limpiar búsqueda al cambiar categoría
+         document.getElementById('searchInput').value = ''; 
+         loadProducts(true); // Recargar desde página 1
+         window.history.pushState(null, "", "/");
+         scrollToCategories();
+       }
 
         function setSort(sort) {
             currentSort = sort;
-            currentPage = 1; // Volver a la página 1 al cambiar el orden
-            applyFiltersAndSort();
+            loadProducts(true); // Recargar desde página 1
         }
 
-        // Esta función centraliza el filtrado, ordenado y la paginación
-        function applyFiltersAndSort() {
-            // 1. Filtrar por categoría
-            let filtered = allProducts;
-            if (currentCategory !== 'all') {
-                filtered = allProducts.filter(p => p.categoria && p.categoria.toLowerCase() === currentCategory.toLowerCase());
-            }
+       
+        async function loadProducts(reset = true) {
+    if (reset) {
+        currentPage = 1;
+        displayedProducts = [];
+        showLoading();
+    }
 
-            // 2. Ordenar los resultados filtrados
-            switch(currentSort) {
-                case 'price-asc':
-                    filtered.sort((a, b) => extractPrice(a.precio) - extractPrice(b.precio));
-                    break;
-                case 'price-desc':
-                    filtered.sort((a, b) => extractPrice(b.precio) - extractPrice(a.precio));
-                    break;
-                case 'discount':
-                    filtered.sort((a, b) => calculateDiscount(b.precio, b.precioAntes) - calculateDiscount(a.precio, a.precioAntes));
-                    break;
-                case 'votes':
-                    filtered.sort((a, b) => ((b.votosHot || 0) - (b.votosCold || 0)) - ((a.votosHot || 0) - (a.votosCold || 0)));
-                    break;
-                default: // default es por fecha (los más nuevos primero)
-                    filtered.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); 
-            }
+    try {
+        // Construimos la URL con todos los parámetros para el Backend
+        let url = `${API_BASE}?activos=true&page=${currentPage}&limit=${PRODUCTS_PER_PAGE}`;
+        if (currentCategory !== 'all') url += `&categoria=${currentCategory}`;
+        if (currentSort !== 'default') url += `&sort=${currentSort}`;
+        if (currentSearch) url += `&search=${encodeURIComponent(currentSearch)}`;
 
-            // 3. Paginar (Cortar el array para mostrar solo los que tocan)
-            window.filteredProducts = filtered; // Guardamos el resultado de la búsqueda actual
-            displayedProducts = filtered.slice(0, currentPage * PRODUCTS_PER_PAGE);
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Error en la API');
+        const data = await response.json();
 
-            // 4. Dibujar en pantalla
-            renderProducts();
-            updateTopDeals();
+        const nuevosProductos = data.ofertas.map(p => ({
+            ...p,
+            votosHot: p.votos_calientes || 0,
+            votosCold: p.votos_frios || 0,
+            timestamp: p.fecha_creacion,
+            descripcion: p.descripcion || 'Consulta todos los detalles en Amazon.'
+        }));
 
-            // 5. Controlar el botón de "Cargar Más"
-            const loadMoreBtn = document.getElementById('loadMoreBtn');
-            if (loadMoreBtn) {
-                // Si estamos mostrando menos productos de los que hay en total en el filtro, mostramos el botón
-                loadMoreBtn.style.display = displayedProducts.length < filtered.length ? 'block' : 'none';
-            }
+        // Si es página 1 (reset), sobreescribimos. Si es Cargar Más, añadimos al final.
+        if (reset) {
+            displayedProducts = nuevosProductos;
+        } else {
+            displayedProducts = [...displayedProducts, ...nuevosProductos];
         }
 
-        async function loadProducts() {
-            showLoading();
-            try {
-                // Pedimos TODAS las ofertas activas al servidor una sola vez
-                const url = `${API_BASE}?activos=true`;
-                const response = await fetch(url);
-                if (!response.ok) throw new Error('Error en la API');
-        
-                const data = await response.json();
-        
-                // Guardar los datos y arreglar el fallo de los nombres en español/inglés
-                allProducts = (data.ofertas || data).map(p => ({
-                    ...p,
-                    votosHot: p.votos_calientes || p.votosHot || 0,
-                    votosCold: p.votos_frios || p.votosCold || 0,
-                    timestamp: p.timestamp || p.fecha_creacion || new Date().toISOString(),
-                    descripcion: (p.descripcion && typeof p.descripcion === 'string') ? p.descripcion : (p.descripcion_tecnica || 'Consulta todos los detalles en Amazon.')
-                }));
-        
-                // Actualizar contadores del menú (Totales, y por categoría)
-                updateStats();
-        
-                // Aplicar la vista inicial
-                applyFiltersAndSort();
-        
-                productsLoaded = true;
-                logDebug(`✅ Cargados ${allProducts.length} productos en total.`);
-                updateLastUpdateTime();
-                checkRoute();
-            } catch (error) {
-                console.error('Error cargando productos:', error);
-                showError();
-                logDebug(`❌ Error: ${error.message}`);
-            }
+        renderProducts();
+
+        // Mostrar u ocultar el botón "Cargar Más" según el TOTAL que indica la Base de Datos
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        if (loadMoreBtn) {
+            loadMoreBtn.style.display = displayedProducts.length < data.total ? 'block' : 'none';
         }
 
-        function loadMoreProducts() {
-            // Aumentamos la página y volvemos a aplicar el corte del array
-            currentPage++;
-            applyFiltersAndSort();
-            logDebug(`✅ Mostrando página ${currentPage}`);
-        }
+        productsLoaded = true;
+        updateLastUpdateTime();
+
+    } catch (error) {
+        console.error('Error cargando productos:', error);
+        showError();
+    }
+}
+
+
+        // Reemplazar loadMoreProducts
+function loadMoreProducts() {
+    currentPage++;
+    loadProducts(false); // false indica que NO queremos resetear la lista
+}
 
         function searchProducts() {
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
-            if (!query) {
-                applyFiltersAndSort();
-                return;
-            }
-            
-            // Buscar en nombre o categoría ignorando el filtro actual
-            const filtered = allProducts.filter(p => 
-                (p.nombre && p.nombre.toLowerCase().includes(query)) || 
-                (p.categoria && p.categoria.toLowerCase().includes(query))
-            );
-            
-            window.filteredProducts = filtered;
-            currentPage = 1;
-            displayedProducts = filtered.slice(0, PRODUCTS_PER_PAGE);
-            
-            renderProducts();
-            
-            const loadMoreBtn = document.getElementById('loadMoreBtn');
-            if (loadMoreBtn) {
-                loadMoreBtn.style.display = displayedProducts.length < filtered.length ? 'block' : 'none';
-            }
-            
-            logDebug(`🔍 Búsqueda: "${query}" - ${filtered.length} resultados`);
-        }
+    const query = document.getElementById('searchInput').value.trim();
+    currentSearch = query;
+    
+    // Opcional: Reiniciar la categoría al buscar en toda la tienda
+    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.category-btn[data-category="all"]').classList.add('active');
+    currentCategory = 'all';
+
+    loadProducts(true); // Pide la búsqueda al servidor desde la página 1
+}
 
 
         // ==================== UPDATE STATS ====================
