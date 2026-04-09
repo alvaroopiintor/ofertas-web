@@ -179,31 +179,62 @@ def add_oferta():
 def get_ofertas():
     categoria = request.args.get("categoria")
     activos = request.args.get("activos", "true")
+    sort = request.args.get("sort", "default")
+    search = request.args.get("search", "").strip()
+    
     page = max(1, int(request.args.get("page", 1)))
     limit = min(100, max(1, int(request.args.get("limit", 20))))
     offset = (page - 1) * limit
     
     conditions = ["activo=TRUE"] if activos.lower() == "true" else []
     params = []
-    if categoria:
+    
+    # 1. Filtro de categoría
+    if categoria and categoria != 'all':
         conditions.append("categoria=%s")
         params.append(categoria)
+        
+    # 2. Filtro de búsqueda (Buscador del header)
+    if search:
+        conditions.append("(LOWER(nombre) LIKE LOWER(%s) OR LOWER(categoria) LIKE LOWER(%s))")
+        params.extend([f"%{search}%", f"%{search}%"])
+        
     where = "WHERE " + " AND ".join(conditions) if conditions else ""
+    
+    # 3. Lógica de Ordenación en BD
+    order_by = "ORDER BY fecha_creacion DESC"
+    if sort == "votes":
+        order_by = "ORDER BY (votos_calientes - votos_frios) DESC"
+    elif sort == "price-asc":
+        # Extrae números del texto "12,99€" y reemplaza coma por punto para ordenar
+        order_by = "ORDER BY NULLIF(regexp_replace(replace(precio, ',', '.'), '[^0-9.]', '', 'g'), '')::NUMERIC ASC"
+    elif sort == "price-desc":
+        order_by = "ORDER BY NULLIF(regexp_replace(replace(precio, ',', '.'), '[^0-9.]', '', 'g'), '')::NUMERIC DESC"
     
     try:
         with get_db_connection() as conn:
             c = conn.cursor()
+            # Contar total de resultados para la paginación del frontend
             c.execute(f"SELECT COUNT(*) FROM ofertas {where}", tuple(params))
             total = c.fetchone()[0]
-            c.execute(f"SELECT id, nombre, precio, link, imagen, categoria, descripcion, activo, fecha_creacion, votos_calientes, votos_frios FROM ofertas {where} ORDER BY fecha_creacion DESC LIMIT %s OFFSET %s", tuple(params) + (limit, offset))
+            
+            # Obtener solo los productos de la página solicitada
+            c.execute(f"""
+                SELECT id, nombre, precio, link, imagen, categoria, descripcion, 
+                       activo, fecha_creacion, votos_calientes, votos_frios 
+                FROM ofertas {where} {order_by} LIMIT %s OFFSET %s
+            """, tuple(params) + (limit, offset))
             rows = c.fetchall()
             
-        res = []
-        for r in rows:
-            res.append({"id": r[0], "nombre": r[1], "precio": r[2], "link": r[3], "imagen": r[4], "categoria": r[5], "descripcion": r[6], "activo": r[7], "fecha_creacion": str(r[8]), "votos_calientes": r[9], "votos_frios": r[10]})
+        res = [{"id": r[0], "nombre": r[1], "precio": r[2], "link": r[3], "imagen": r[4], 
+                "categoria": r[5], "descripcion": r[6], "activo": r[7], 
+                "fecha_creacion": str(r[8]), "votos_calientes": r[9], "votos_frios": r[10]} for r in rows]
+                
         return jsonify({"ofertas": res, "total": total})
     except Exception as e:
+        logger.error(f"Error cargando ofertas: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
+
 
 @app.route("/api/ofertas/<int:id>/activo", methods=["PATCH"])
 @requiere_api_key
