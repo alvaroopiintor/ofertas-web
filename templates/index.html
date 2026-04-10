@@ -2940,6 +2940,7 @@ function prevRelatedProducts() {
 
         const nuevosProductos = data.ofertas.map(p => ({
             ...p,
+            precioAntes: p.precio_antes,
             votosHot: p.votos_calientes || 0,
             votosCold: p.votos_frios || 0,
             timestamp: p.fecha_creacion,
@@ -3293,25 +3294,7 @@ async function updateStats() {
             `).join('');
         }
 
-        function searchProducts() {
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
-            if (!query) {
-                loadProducts();
-                return;
-            }
-            
-            const filtered = allProducts.filter(p => (p.nombre && p.nombre.toLowerCase().includes(query)) || (p.categoria && p.categoria.toLowerCase().includes(query)));
-            displayedProducts = filtered.slice(0, PRODUCTS_PER_PAGE);
-            renderProducts();
-            
-            const loadMoreBtn = document.getElementById('loadMoreBtn');
-            if (loadMoreBtn) {
-                loadMoreBtn.style.display = displayedProducts.length < filtered.length ? 'block' : 'none';
-            }
-            
-            logDebug(`🔍 Búsqueda: "${query}" - ${filtered.length} resultados`);
-        }
-
+        
         function refreshData() {
             logDebug('🔄 Actualizando datos...');
             loadProducts();
