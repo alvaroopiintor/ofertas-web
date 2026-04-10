@@ -2651,7 +2651,7 @@ function updateRelatedGrid() {
             <div class="product-card" onclick="showProductDetailPage(${JSON.stringify(p).replace(/"/g, '&quot;')})">
                 <div class="product-card-image">
                     <div style="position: absolute; bottom: 10px; left: 10px; z-index: 10; display: flex; align-items: center; justify-content: center;">
-                        <img src="/static/logoamazon.png" style="height: 45px; width: auto; object-fit: contain; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.3));">
+                        <img src="/static/logoamazon.png" style="height: 55px; width: auto; object-fit: contain; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.4));">
                     </div>
                     <img src="${sanitizeURL(p.imagen) || 'https://via.placeholder.com/300x200?text=Producto'}" alt="${p.nombre}" loading="lazy">
                 </div>
@@ -3091,6 +3091,7 @@ async function updateStats() {
                 imageDiv.className = 'product-card-image';
                 imageDiv.onclick = (e) => {
                     e.stopPropagation();
+                    console.log('🔵 Click en imagen - Producto ID:', producto.id);
                     showProductDetailPage(producto);
                 };
                 
@@ -3100,12 +3101,12 @@ async function updateStats() {
                 img.onerror = function() { this.src = 'https://via.placeholder.com/300x200?text=Sin+imagen'; };
                 img.loading = 'lazy';
                 
-                // --- LOGO DE AMAZON (Ampliado y sin recuadro) ---
+                // --- LOGO DE AMAZON (Mucho más grande: height 55px, sin fondos rojos ni porcentajes) ---
                 const logoBadge = document.createElement('div');
-                // He quitado el background, el padding y el shadow. He aumentado el tamaño a 45px.
                 logoBadge.style.cssText = 'position: absolute; bottom: 10px; left: 10px; z-index: 10; display: flex; align-items: center; justify-content: center;';
-                logoBadge.innerHTML = '<img src="/static/logoamazon.png" style="height: 45px; width: auto; object-fit: contain; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.3));">';
+                logoBadge.innerHTML = '<img src="/static/logoamazon.png" style="height: 55px; width: auto; object-fit: contain; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.4));">';
                 
+                // Solo añadimos el logo y la imagen principal al contenedor (CERO FUEGOS, CERO PORCENTAJES)
                 imageDiv.appendChild(logoBadge);
                 imageDiv.appendChild(img);
                 card.appendChild(imageDiv);
