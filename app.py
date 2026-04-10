@@ -216,12 +216,20 @@ def get_ofertas():
     order_by = "ORDER BY fecha_creacion DESC"
     if sort == "votes":
         order_by = "ORDER BY (votos_calientes - votos_frios) DESC"
-    elif sort == "price-asc":
-        # Extrae números del texto "12,99€" y reemplaza coma por punto para ordenar
-        order_by = "ORDER BY NULLIF(regexp_replace(replace(precio, ',', '.'), '[^0-9.]', '', 'g'), '')::NUMERIC ASC"
-    elif sort == "price-desc":
-        order_by = "ORDER BY NULLIF(regexp_replace(replace(precio, ',', '.'), '[^0-9.]', '', 'g'), '')::NUMERIC DESC"
-    
+    elif sort == "discount-desc":
+        order_by = """ORDER BY 
+            CASE WHEN precio_antes IS NOT NULL AND precio_antes != 'N/A' AND precio IS NOT NULL 
+            THEN (CAST(NULLIF(regexp_replace(replace(precio_antes, ',', '.'), '[^0-9.]', '', 'g'), '') AS NUMERIC) - 
+                  CAST(NULLIF(regexp_replace(replace(precio, ',', '.'), '[^0-9.]', '', 'g'), '') AS NUMERIC)) 
+                 / CAST(NULLIF(regexp_replace(replace(precio_antes, ',', '.'), '[^0-9.]', '', 'g'), '') AS NUMERIC)
+            ELSE 0 END DESC NULLS LAST"""
+    elif sort == "discount-asc":
+        order_by = """ORDER BY 
+            CASE WHEN precio_antes IS NOT NULL AND precio_antes != 'N/A' AND precio IS NOT NULL 
+            THEN (CAST(NULLIF(regexp_replace(replace(precio_antes, ',', '.'), '[^0-9.]', '', 'g'), '') AS NUMERIC) - 
+                  CAST(NULLIF(regexp_replace(replace(precio, ',', '.'), '[^0-9.]', '', 'g'), '') AS NUMERIC)) 
+                 / CAST(NULLIF(regexp_replace(replace(precio_antes, ',', '.'), '[^0-9.]', '', 'g'), '') AS NUMERIC)
+            ELSE 0 END ASC NULLS LAST"""
     try:
         with get_db_connection() as conn:
             c = conn.cursor()
