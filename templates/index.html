@@ -1350,6 +1350,31 @@
             flex-shrink: 0;
         }
 
+
+        .prev-related-btn {
+            background: var(--bg-color);
+            color: var(--text-color);
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: var(--shadow);
+            flex-shrink: 0;
+        }
+
+        .prev-related-btn:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: #fff;
+            transform: scale(1.1);
+        }
+
         .next-related-btn:hover {
             background: var(--primary-hover);
             transform: scale(1.1);
@@ -1904,11 +1929,16 @@
                             <h3><i class="fas fa-th"></i> Ofertas Relacionadas</h3>
                         </div>
                         <div class="related-carousel">
-                            <div class="related-grid" id="detailRelatedGrid"></div>
-                            <button class="next-related-btn" onclick="nextRelatedProducts()" id="nextRelatedBtn" style="display: none;" title="Ver más ofertas">
-                                <i class="fas fa-chevron-right"></i>
-                            </button>
-                        </div>
+                             <button class="prev-related-btn" onclick="prevRelatedProducts()" id="prevRelatedBtn" style="display: none;" title="Ver ofertas anteriores">
+                                 <i class="fas fa-chevron-left"></i>
+                             </button>
+    
+                             <div class="related-grid" id="detailRelatedGrid"></div>
+    
+                             <button class="next-related-btn" onclick="nextRelatedProducts()" id="nextRelatedBtn" style="display: none;" title="Ver más ofertas">
+                                 <i class="fas fa-chevron-right"></i>
+                             </button>
+                         </div>
                     </div>
                 </div>
                 
@@ -2560,21 +2590,23 @@ async function renderDetailRelated(producto) {
 function updateRelatedGrid() {
     const relatedGrid = document.getElementById('detailRelatedGrid');
     const nextBtn = document.getElementById('nextRelatedBtn');
+    const prevBtn = document.getElementById('prevRelatedBtn'); // NUEVO
     
     if (!relatedGrid) return;
     
     if (relatedProductsList.length === 0) {
         relatedGrid.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">No hay ofertas relacionadas en esta categoría</p>';
         if (nextBtn) nextBtn.style.display = 'none';
+        if (prevBtn) prevBtn.style.display = 'none';
         return;
     }
     
     // Reiniciar animación del carrusel
     relatedGrid.classList.remove('carousel-animate');
-    void relatedGrid.offsetWidth; // Truco visual para reiniciar animaciones CSS
+    void relatedGrid.offsetWidth;
     relatedGrid.classList.add('carousel-animate');
     
-    // Cortamos los 3 productos que tocan ver en este momento
+    // Cortamos los 3 productos que tocan ver
     const visibleProducts = relatedProductsList.slice(relatedProductsIndex, relatedProductsIndex + RELATED_PER_PAGE);
     
     relatedGrid.innerHTML = visibleProducts.map(p => {
@@ -2599,29 +2631,39 @@ function updateRelatedGrid() {
         `;
     }).join('');
 
-    // Controlamos si se muestra el botón de Siguiente (solo si hay más de 3 productos relacionados en total)
+    // LÓGICA DE BOTONES INTELIGENTES
+    // Botón Siguiente: Solo se muestra si quedan productos a la derecha
     if (nextBtn) {
-        if (relatedProductsList.length <= RELATED_PER_PAGE) {
-            nextBtn.style.display = 'none';
-        } else {
+        if (relatedProductsIndex + RELATED_PER_PAGE < relatedProductsList.length) {
             nextBtn.style.display = 'flex';
+        } else {
+            nextBtn.style.display = 'none'; // Se oculta al llegar al final
+        }
+    }
+
+    // Botón Anterior: Solo se muestra si no estamos en el inicio (índice > 0)
+    if (prevBtn) {
+        if (relatedProductsIndex > 0) {
+            prevBtn.style.display = 'flex';
+        } else {
+            prevBtn.style.display = 'none'; // Se oculta al principio
         }
     }
 }
 
 function nextRelatedProducts() {
-    // Avanzamos 3 productos
-    relatedProductsIndex += RELATED_PER_PAGE;
-    
-    // Si al avanzar nos salimos del total de productos, volvemos a empezar desde el principio (bucle infinito)
-    if (relatedProductsIndex >= relatedProductsList.length) {
-        relatedProductsIndex = 0;
+    if (relatedProductsIndex + RELATED_PER_PAGE < relatedProductsList.length) {
+        relatedProductsIndex += RELATED_PER_PAGE;
+        updateRelatedGrid();
     }
-    
-    // Volvemos a dibujar
-    updateRelatedGrid();
 }
 
+function prevRelatedProducts() {
+    if (relatedProductsIndex - RELATED_PER_PAGE >= 0) {
+        relatedProductsIndex -= RELATED_PER_PAGE;
+        updateRelatedGrid();
+    }
+}
 
         // ==================== SHOW HOME ====================
         function showHome(event) {
@@ -2925,49 +2967,50 @@ function loadMoreProducts() {
 
 
         // ==================== UPDATE STATS ====================
-        function updateStats() {
-            const statTotal = document.getElementById('statTotal');
-            const statActive = document.getElementById('statActive');
-            const statMaxDiscount = document.getElementById('statMaxDiscount');
-            
-            const statTotalSidebar = document.getElementById('statTotalSidebar');
-            const statActiveSidebar = document.getElementById('statActiveSidebar');
-            const statMaxDiscountSidebar = document.getElementById('statMaxDiscountSidebar');
-            
-            const statTotalDetail = document.getElementById('statTotalDetail');
-            const statActiveDetail = document.getElementById('statActiveDetail');
-            const statMaxDiscountDetail = document.getElementById('statMaxDiscountDetail');
-            
-            if (statTotal) statTotal.textContent = allProducts.length;
-            if (statActive) statActive.textContent = allProducts.filter(p => p.activo !== false).length;
-            
-            let maxDisc = 0;
-            allProducts.forEach(p => {
-                const disc = calculateDiscount(p.precio, p.precioAntes);
-                if (disc > maxDisc) maxDisc = disc;
+        // ==================== UPDATE STATS ====================
+async function updateStats() {
+    try {
+        const res = await fetch(`${API_BASE.replace('/api/ofertas', '')}/api/stats`);
+        if (!res.ok) throw new Error('Error al conectar con stats');
+        const data = await res.json();
+
+        if (data.total !== undefined) {
+            // 1. Actualizar Totales
+            const elsTotal = ['statTotal', 'statTotalSidebar', 'statTotalDetail'];
+            elsTotal.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = data.total;
             });
-            if (statMaxDiscount) statMaxDiscount.textContent = `${maxDisc}%`;
+
+            // 2. Actualizar Activos
+            const elsActive = ['statActive', 'statActiveSidebar', 'statActiveDetail'];
+            elsActive.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = data.activos;
+            });
             
-            // Actualizar sidebar
-            if (statTotalSidebar) statTotalSidebar.textContent = allProducts.length;
-            if (statActiveSidebar) statActiveSidebar.textContent = allProducts.filter(p => p.activo !== false).length;
-            if (statMaxDiscountSidebar) statMaxDiscountSidebar.textContent = `${maxDisc}%`;
-            
-            // Actualizar detail
-            if (statTotalDetail) statTotalDetail.textContent = allProducts.length;
-            if (statActiveDetail) statActiveDetail.textContent = allProducts.filter(p => p.activo !== false).length;
-            if (statMaxDiscountDetail) statMaxDiscountDetail.textContent = `${maxDisc}%`;
-            
-            // Actualizar contadores de categorías
+            // 3. Mayor Descuento (Icono de fuego, ya que no guardamos precio_antes en BD)
+            const elsDiscount = ['statMaxDiscount', 'statMaxDiscountSidebar', 'statMaxDiscountDetail'];
+            elsDiscount.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = '🔥'; 
+            });
+
+            // 4. Actualizar contadores de categorías en el menú lateral
             const categories = ['tecnologia', 'hogar', 'moda', 'belleza', 'deportes', 'juguetes', 'mascotas'];
             categories.forEach(cat => {
-                const count = allProducts.filter(p => p.categoria === cat).length;
+                // Buscamos cuántos hay de esta categoría en el diccionario que mandó el servidor
+                // Si la categoría no existe en el dict (ej. hay 0 productos), ponemos 0 por defecto
+                const count = data.categorias[cat] || 0; 
                 
-                // Actualiza solo el contador del menú lateral desplegable
                 const elSidebar = document.getElementById(`count-${cat}-sidebar`);
                 if (elSidebar) elSidebar.textContent = count;
             });
         }
+    } catch (e) {
+        console.error("❌ Error cargando estadísticas:", e);
+    }
+}
 
         
 
