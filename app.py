@@ -137,6 +137,11 @@ if os.environ.get("DATABASE_URL"):
 def home():
     return render_template("index.html", meta=None)
 
+@app.route("/ping")
+def ping():
+    """Ruta ligera para mantener el servidor despierto desde Google Apps Script"""
+    return jsonify({"status": "ok", "mensaje": "Servidor despierto"})
+
 @app.route("/producto/<int:producto_id>")
 def seo_producto(producto_id):
     try:
