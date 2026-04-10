@@ -2406,27 +2406,27 @@
             if (!list && !listDetail) return;
             
             try {
-                // Pedimos al servidor los 3 productos con más descuento
-                const response = await fetch(`${API_BASE}?sort=discount-desc&limit=3&activos=true`);
+                // Pedimos un poco más de margen (limit=10) para poder filtrar el actual y que sobren 3
+                const response = await fetch(`${API_BASE}?sort=discount-desc&limit=10&activos=true`);
                 if (!response.ok) throw new Error('Error al cargar destacados');
                 const data = await response.json();
                 
                 let featured = data.ofertas;
                 
-                // Si estamos viendo un producto, lo ocultamos de los destacados para no repetirlo
+                // Filtramos para que NO aparezca el producto que el usuario está viendo ahora mismo
                 if (currentProduct) {
-                    featured = featured.filter(p => p.id !== currentProduct.id).slice(0, 3);
+                    featured = featured.filter(p => p.id !== currentProduct.id);
                 }
+                
+                // Siempre tomamos exactamente 3 de los que quedan
+                featured = featured.slice(0, 3);
 
-                if (featured.length === 0) {
-                    const emptyHTML = '<li style="text-align: center; color: var(--text-muted); padding: 20px;">No hay destacados hoy</li>';
-                    if (list) list.innerHTML = emptyHTML;
-                    if (listDetail) listDetail.innerHTML = emptyHTML;
-                    return;
+                if (featured.length < 3) {
+                    // Si por algún motivo hay pocos productos, no mostramos nada o mostramos lo que haya
+                    if (featured.length === 0) return;
                 }
 
                 const html = featured.map((p, index) => {
-                    // Ojo: Desde la API el precio antiguo se llama precio_antes
                     const descuento = calculateDiscount(p.precio, p.precio_antes); 
                     return `
                         <li class="featured-product-item" onclick="showProductDetailPage(${JSON.stringify(p).replace(/"/g, '&quot;')})">
@@ -2650,8 +2650,8 @@ function updateRelatedGrid() {
         return `
             <div class="product-card" onclick="showProductDetailPage(${JSON.stringify(p).replace(/"/g, '&quot;')})">
                 <div class="product-card-image">
-                    <div style="position: absolute; bottom: 10px; left: 10px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 10; display: flex; align-items: center; justify-content: center;">
-                        <img src="/static/logoamazon.png" style="height: 25px; width: auto; object-fit: contain; margin: 0; padding: 0;">
+                    <div style="position: absolute; bottom: 10px; left: 10px; z-index: 10; display: flex; align-items: center; justify-content: center;">
+                        <img src="/static/logoamazon.png" style="height: 45px; width: auto; object-fit: contain; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.3));">
                     </div>
                     <img src="${sanitizeURL(p.imagen) || 'https://via.placeholder.com/300x200?text=Producto'}" alt="${p.nombre}" loading="lazy">
                 </div>
@@ -3091,7 +3091,6 @@ async function updateStats() {
                 imageDiv.className = 'product-card-image';
                 imageDiv.onclick = (e) => {
                     e.stopPropagation();
-                    console.log('🔵 Click en imagen - Producto ID:', producto.id);
                     showProductDetailPage(producto);
                 };
                 
@@ -3101,15 +3100,13 @@ async function updateStats() {
                 img.onerror = function() { this.src = 'https://via.placeholder.com/300x200?text=Sin+imagen'; };
                 img.loading = 'lazy';
                 
-               // Quitar Prime, Flash y Fueguitos. Solo dejamos la imagen y el logo
-                
-                // 1. Añadimos SOLO el logo de Amazon en la esquina inferior izquierda
+                // --- LOGO DE AMAZON (Ampliado y sin recuadro) ---
                 const logoBadge = document.createElement('div');
-                logoBadge.style.cssText = 'position: absolute; bottom: 10px; left: 10px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 10; display: flex; align-items: center; justify-content: center;';
-                logoBadge.innerHTML = '<img src="/static/logoamazon.png" style="height: 25px; width: auto; object-fit: contain; margin: 0; padding: 0;">';
-                imageDiv.appendChild(logoBadge);
+                // He quitado el background, el padding y el shadow. He aumentado el tamaño a 45px.
+                logoBadge.style.cssText = 'position: absolute; bottom: 10px; left: 10px; z-index: 10; display: flex; align-items: center; justify-content: center;';
+                logoBadge.innerHTML = '<img src="/static/logoamazon.png" style="height: 45px; width: auto; object-fit: contain; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.3));">';
                 
-                // NO AÑADIMOS NI FUEGOS, NI PORCENTAJES SOBRE LA IMAGEN
+                imageDiv.appendChild(logoBadge);
                 imageDiv.appendChild(img);
                 card.appendChild(imageDiv);
                 
