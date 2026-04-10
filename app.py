@@ -250,33 +250,56 @@ def get_ofertas():
 
 @app.route("/api/stats", methods=["GET"])
 def get_stats():
-    """Devuelve el conteo total y por categorías para el frontend"""
+    """Devuelve las estadísticas avanzadas (Marketing) y categorías para el frontend"""
     try:
         with get_db_connection() as conn:
             c = conn.cursor()
-            # Contar totales
-            c.execute("SELECT COUNT(*) FROM ofertas")
-            total = c.fetchone()[0]
             
-            # Contar activos
+            # 1. Contar ofertas activas
             c.execute("SELECT COUNT(*) FROM ofertas WHERE activo=TRUE")
-            activos = c.fetchone()[0]
+            activos = c.fetchone()[0] or 0
             
-            # Contar por categorías (solo activos)
+            # 2. Contar chollos publicados HOY (FOMO)
+            c.execute("SELECT COUNT(*) FROM ofertas WHERE DATE(fecha_creacion) = CURRENT_DATE AND activo=TRUE")
+            chollos_hoy = c.fetchone()[0] or 0
+            
+            # 3. Sumar todos los votos de la comunidad (Prueba Social)
+            c.execute("SELECT SUM(votos_calientes), SUM(votos_frios) FROM ofertas")
+            votos = c.fetchone()
+            votos_totales = (votos[0] or 0) + (votos[1] or 0)
+            
+            # 4. Calcular el Mayor Descuento actual de forma segura
+            c.execute("SELECT precio, precio_antes FROM ofertas WHERE activo=TRUE AND precio_antes IS NOT NULL AND precio_antes != 'N/A'")
+            precios_rows = c.fetchall()
+            
+            mayor_descuento = 0
+            for precio_final, precio_original in precios_rows:
+                if precio_final and precio_original:
+                    try:
+                        # Limpiamos el texto "12,99€" a número 12.99
+                        p_num = float(str(precio_final).replace('€', '').replace('.', '').replace(',', '.').strip())
+                        pa_num = float(str(precio_original).replace('€', '').replace('.', '').replace(',', '.').strip())
+                        if pa_num > 0:
+                            desc = round(((pa_num - p_num) / pa_num) * 100)
+                            if desc > mayor_descuento:
+                                mayor_descuento = desc
+                    except Exception:
+                        pass # Ignora si algún precio tiene texto raro
+            
+            # 5. Contar por categorías
             c.execute("SELECT categoria, COUNT(*) FROM ofertas WHERE activo=TRUE GROUP BY categoria")
-            categorias_db = c.fetchall()
-            # Convertimos la respuesta en un diccionario {'tecnologia': 15, 'hogar': 8, ...}
-            categorias_dict = {row[0]: row[1] for row in categorias_db}
+            categorias_dict = {row[0]: row[1] for row in c.fetchall()}
             
         return jsonify({
-            "total": total, 
             "activos": activos,
+            "chollos_hoy": chollos_hoy,
+            "votos_totales": votos_totales,
+            "mayor_descuento": mayor_descuento,
             "categorias": categorias_dict
         })
     except Exception as e:
         logger.error(f"Error obteniendo stats: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
-
 
 
 @app.route("/api/ofertas/<int:id>/activo", methods=["PATCH"])
