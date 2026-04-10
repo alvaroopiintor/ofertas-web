@@ -2231,16 +2231,18 @@
                 window.history.pushState({ id: producto.id }, "", `/producto/${producto.id}`);
             }
             
-            const descuento = calculateDiscount(producto.precio, producto.precioAntes);
+            // 🔥 SOLUCIÓN: Calculamos el precio antiguo correctamente
+            const precioAntiguo = producto.precioAntes || producto.precio_antes;
+            const descuento = calculateDiscount(producto.precio, precioAntiguo);
             const userVote = getUserVote(producto.id);
             const votosNetos = (producto.votosHot || 0) - (producto.votosCold || 0);
             
-            // Rellenar datos de la página
             const detailImage = document.getElementById('detailImage');
-            const imageContainer = document.querySelector('.product-detail-image-container'); // Buscamos el contenedor
+            const imageContainer = document.querySelector('.product-detail-image-container'); 
             const detailTitle = document.getElementById('detailTitle');
             const detailPrice = document.getElementById('detailPrice');
             const detailAmazonLink = document.getElementById('detailAmazonLink');
+            const detailCategory = document.getElementById('detailCategory');
             
             if (detailImage) detailImage.src = sanitizeURL(producto.imagen) || 'https://via.placeholder.com/600x600?text=Producto';
             if (detailCategory) detailCategory.textContent = producto.categoria || 'General';
@@ -2248,27 +2250,20 @@
             if (detailPrice) detailPrice.textContent = producto.precio || '';
             if (detailAmazonLink) detailAmazonLink.href = sanitizeURL(producto.link) || '#';
             
-
-            // --- AÑADIR LOGO A LA IMAGEN GRANDE ---
+            // LOGO Y BOTÓN COMPARTIR EN IMAGEN GRANDE
             if (imageContainer) {
-                imageContainer.style.position = 'relative'; // Aseguramos que el contenedor permita posicionar el logo
+                imageContainer.style.position = 'relative'; 
                 
-                // Limpiamos logos anteriores para que no se amontonen si cambias de producto
                 const oldLogo = imageContainer.querySelector('.detail-logo-badge');
                 if (oldLogo) oldLogo.remove();
-
                 const detailLogo = document.createElement('div');
                 detailLogo.className = 'detail-logo-badge';
-                // Lo ponemos a 15px de la esquina en la imagen grande porque el contenedor es más amplio
                 detailLogo.style.cssText = 'position: absolute; bottom: 15px; left: 15px; z-index: 10;';
                 detailLogo.innerHTML = '<img src="/static/logoamazon.png" style="height: 80px; width: auto; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.3));">';
                 imageContainer.appendChild(detailLogo);
-            }      
 
-            // --- AÑADIR BOTÓN COMPARTIR A LA IMAGEN GRANDE ---
                 const oldShare = imageContainer.querySelector('.detail-share-badge');
                 if (oldShare) oldShare.remove();
-
                 const detailShare = document.createElement('div');
                 detailShare.className = 'detail-share-badge';
                 detailShare.style.cssText = 'position: absolute; top: 15px; left: 15px; z-index: 10; background: rgba(255,255,255,0.9); border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); color: var(--primary-color); font-size: 18px; transition: all 0.2s;';
@@ -2277,12 +2272,11 @@
                 detailShare.onmouseover = () => detailShare.style.transform = 'scale(1.1)';
                 detailShare.onmouseout = () => detailShare.style.transform = 'scale(1)';
                 imageContainer.appendChild(detailShare);    
+            }
 
-            // Breadcrumb
             document.getElementById('breadcrumbProduct').textContent = producto.nombre || 'Producto';
             document.getElementById('breadcrumbCategory').textContent = producto.categoria || 'General';
             
-            // Precio anterior y descuento
             const detailOldPrice = document.getElementById('detailOldPrice');
             const detailDiscount = document.getElementById('detailDiscount');
 
@@ -2296,13 +2290,11 @@
             }
             if (detailDiscount) {
                 detailDiscount.textContent = descuento > 0 ? `-${descuento}%` : '';
-                // Podemos usar los mismos colores verdes para el detalle:
                 detailDiscount.style.backgroundColor = '#e6f4ea';
                 detailDiscount.style.color = '#137333';
                 detailDiscount.style.display = descuento > 0 ? 'inline' : 'none';
             }
             
-            // ✅ VOTOS - ACTUALIZAR BOTONES CON ESTADO DEL USUARIO
             const detailVoteHot = document.getElementById('detailVoteHot');
             const detailVoteCold = document.getElementById('detailVoteCold');
             const detailVoteHotCount = document.getElementById('detailVoteHotCount');
@@ -2316,50 +2308,32 @@
                 detailVoteTotal.className = `product-detail-vote-total ${votosNetos >= 0 ? 'positive' : 'negative'}`;
             }
             
-            // ✅ APLICAR CLASES DE VOTO DEL USUARIO
             if (detailVoteHot) {
                 detailVoteHot.classList.remove('voted-hot', 'voted-cold');
-                if (userVote === 'hot') {
-                    detailVoteHot.classList.add('voted-hot');
-                }
+                if (userVote === 'hot') detailVoteHot.classList.add('voted-hot');
             }
             if (detailVoteCold) {
                 detailVoteCold.classList.remove('voted-hot', 'voted-cold');
-                if (userVote === 'cold') {
-                    detailVoteCold.classList.add('voted-cold');
-                }
+                if (userVote === 'cold') detailVoteCold.classList.add('voted-cold');
             }
             
-            // Timestamp
             const detailTimestamp = document.getElementById('detailTimestamp');
             if (detailTimestamp) detailTimestamp.textContent = tiempoRelativo(producto.timestamp);
             
-            // Descripción
             renderDetailDescription(producto);
-            
-            // Comentarios (carga inicial)
             currentCommentPage = 1;
-            renderDetailComments(producto.id, true); // true indica que es una carga desde cero
-            
-            // Productos relacionados (Nuevo Carrusel)
+            renderDetailComments(producto.id, true); 
             renderDetailRelated(producto);
             
-            // Mostrar página completa
             document.getElementById('homeSection').style.display = 'none';
             document.getElementById('blogSection').style.display = 'none';
             document.getElementById('hotSection').style.display = 'none';
             document.getElementById('storesSection').style.display = 'none';
             document.getElementById('productDetailSection').classList.add('active');
             
-            // Actualizar nav active
             document.querySelectorAll('.sidebar-btn').forEach(btn => btn.classList.remove('active'));
-            
-            // ✅ CARGAR PRODUCTOS DESTACADOS EN SIDEBAR (con el nuevo filtro para excluir al producto actual)
             renderFeaturedProducts();
-            
             window.scrollTo(0, 0);
-            
-            logDebug(`📄 Página de detalle abierta: ${producto.id}`);
         }
 
         // ==================== HANDLE VOTE ON DETAIL PAGE ====================
@@ -2690,7 +2664,7 @@ function updateRelatedGrid() {
         return `
             <div class="product-card" onclick="showProductDetailPage(${JSON.stringify(p).replace(/"/g, '&quot;')})">
               
-            </div><div class="product-card-image">
+                <div class="product-card-image">
                     <div onclick="shareProduct(event, ${p.id})" style="position: absolute; top: 10px; left: 10px; z-index: 10; background: rgba(255,255,255,0.9); border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3); color: var(--primary-color); transition: all 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
                         <i class="fas fa-share-alt"></i>
                     </div>
