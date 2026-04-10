@@ -241,6 +241,37 @@ def get_ofertas():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
+@app.route("/api/stats", methods=["GET"])
+def get_stats():
+    """Devuelve el conteo total y por categorías para el frontend"""
+    try:
+        with get_db_connection() as conn:
+            c = conn.cursor()
+            # Contar totales
+            c.execute("SELECT COUNT(*) FROM ofertas")
+            total = c.fetchone()[0]
+            
+            # Contar activos
+            c.execute("SELECT COUNT(*) FROM ofertas WHERE activo=TRUE")
+            activos = c.fetchone()[0]
+            
+            # Contar por categorías (solo activos)
+            c.execute("SELECT categoria, COUNT(*) FROM ofertas WHERE activo=TRUE GROUP BY categoria")
+            categorias_db = c.fetchall()
+            # Convertimos la respuesta en un diccionario {'tecnologia': 15, 'hogar': 8, ...}
+            categorias_dict = {row[0]: row[1] for row in categorias_db}
+            
+        return jsonify({
+            "total": total, 
+            "activos": activos,
+            "categorias": categorias_dict
+        })
+    except Exception as e:
+        logger.error(f"Error obteniendo stats: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+
 @app.route("/api/ofertas/<int:id>/activo", methods=["PATCH"])
 @requiere_api_key
 def update_activo(id):
