@@ -181,6 +181,7 @@ def add_oferta():
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """, (data.get("nombre"), data.get("precio"), data.get("precio_antes"), data.get("link"),
                   data.get("imagen"), data.get("categoria"), data.get("descripcion", ""), data.get("activo", True)))
+            conn.commit()
         return jsonify({"status": "ok"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
