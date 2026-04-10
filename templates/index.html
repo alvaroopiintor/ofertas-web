@@ -2263,7 +2263,20 @@
                 detailLogo.style.cssText = 'position: absolute; bottom: 15px; left: 15px; z-index: 10;';
                 detailLogo.innerHTML = '<img src="/static/logoamazon.png" style="height: 80px; width: auto; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.3));">';
                 imageContainer.appendChild(detailLogo);
-            }          
+            }      
+
+            // --- AÑADIR BOTÓN COMPARTIR A LA IMAGEN GRANDE ---
+                const oldShare = imageContainer.querySelector('.detail-share-badge');
+                if (oldShare) oldShare.remove();
+
+                const detailShare = document.createElement('div');
+                detailShare.className = 'detail-share-badge';
+                detailShare.style.cssText = 'position: absolute; top: 15px; left: 15px; z-index: 10; background: rgba(255,255,255,0.9); border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); color: var(--primary-color); font-size: 18px; transition: all 0.2s;';
+                detailShare.innerHTML = '<i class="fas fa-share-alt"></i>';
+                detailShare.onclick = (e) => shareProduct(e, producto.id);
+                detailShare.onmouseover = () => detailShare.style.transform = 'scale(1.1)';
+                detailShare.onmouseout = () => detailShare.style.transform = 'scale(1)';
+                imageContainer.appendChild(detailShare);    
 
             // Breadcrumb
             document.getElementById('breadcrumbProduct').textContent = producto.nombre || 'Producto';
@@ -2274,8 +2287,8 @@
             const detailDiscount = document.getElementById('detailDiscount');
 
             if (detailOldPrice) {
-                if (producto.precio_antes && producto.precio_antes !== "N/A") {
-                    detailOldPrice.textContent = producto.precio_antes;
+                if (precioAntiguo && precioAntiguo !== "N/A") {
+                    detailOldPrice.textContent = precioAntiguo;
                     detailOldPrice.style.display = 'inline';
                 } else {
                     detailOldPrice.style.display = 'none';
@@ -2438,13 +2451,13 @@
                 // Siempre tomamos exactamente 3 de los que quedan
                 featured = featured.slice(0, 3);
 
-                if (featured.length < 3) {
-                    // Si por algún motivo hay pocos productos, no mostramos nada o mostramos lo que haya
-                    if (featured.length === 0) return;
-                }
+                if (featured.length === 0) return;
 
                 const html = featured.map((p, index) => {
-                    const descuento = calculateDiscount(p.precio, p.precio_antes); 
+                    // Detectamos el precio antiguo (formato API o formato local)
+                    const precioAntiguo = p.precio_antes || p.precioAntes;
+                    const descuento = calculateDiscount(p.precio, precioAntiguo); 
+                    
                     return `
                         <li class="featured-product-item" onclick="showProductDetailPage(${JSON.stringify(p).replace(/"/g, '&quot;')})">
                             <div style="position: relative;">
@@ -2453,7 +2466,13 @@
                             </div>
                             <div class="featured-product-info">
                                 <div class="featured-product-title">${sanitizeHTML(p.nombre || 'Producto')}</div>
-                                <div class="featured-product-price">${p.precio || 'N/A'}</div>
+                                
+                                <div style="display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; margin-bottom: 4px;">
+                                    <div class="featured-product-price" style="font-size: 15px;">${p.precio || 'N/A'}</div>
+                                    ${precioAntiguo && precioAntiguo !== "N/A" ? 
+                                        `<span style="text-decoration: line-through; color: var(--text-muted); font-size: 11px;">${precioAntiguo}</span>` : ''}
+                                </div>
+                                
                                 ${descuento > 0 ? `<span class="featured-product-discount">-${descuento}%</span>` : ''}
                             </div>
                         </li>
@@ -2622,6 +2641,7 @@ async function renderDetailRelated(producto) {
             .filter(p => p.id !== producto.id)
             .map(p => ({
                 ...p,
+                precioAntes: p.precio_antes, // <--- AÑADIMOS EL TRADUCTOR AQUÍ
                 votosHot: p.votos_calientes || 0,
                 votosCold: p.votos_frios || 0
             }));
@@ -2643,7 +2663,7 @@ async function renderDetailRelated(producto) {
 function updateRelatedGrid() {
     const relatedGrid = document.getElementById('detailRelatedGrid');
     const nextBtn = document.getElementById('nextRelatedBtn');
-    const prevBtn = document.getElementById('prevRelatedBtn'); // NUEVO
+    const prevBtn = document.getElementById('prevRelatedBtn'); 
     
     if (!relatedGrid) return;
     
@@ -2659,14 +2679,22 @@ function updateRelatedGrid() {
     void relatedGrid.offsetWidth;
     relatedGrid.classList.add('carousel-animate');
     
-    // Cortamos los 3 productos que tocan ver
+    // Cortamos los productos que tocan ver
     const visibleProducts = relatedProductsList.slice(relatedProductsIndex, relatedProductsIndex + RELATED_PER_PAGE);
     
     relatedGrid.innerHTML = visibleProducts.map(p => {
-        const descuento = calculateDiscount(p.precio, p.precioAntes);
+        // 🔥 SOLUCIÓN A PRUEBA DE BALAS: Buscamos el precio antiguo en ambos formatos
+        const precioAntiguo = p.precio_antes || p.precioAntes;
+        const descuento = calculateDiscount(p.precio, precioAntiguo);
+        
         return `
             <div class="product-card" onclick="showProductDetailPage(${JSON.stringify(p).replace(/"/g, '&quot;')})">
-                <div class="product-card-image">
+              
+            </div><div class="product-card-image">
+                    <div onclick="shareProduct(event, ${p.id})" style="position: absolute; top: 10px; left: 10px; z-index: 10; background: rgba(255,255,255,0.9); border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3); color: var(--primary-color); transition: all 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                        <i class="fas fa-share-alt"></i>
+                    </div>
+                    
                     <div style="position: absolute; bottom: 5px; left: 5px; z-index: 10; display: flex; align-items: center; justify-content: center;">
                         <img src="/static/logoamazon.png" style="height: 65px; width: auto; object-fit: contain; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.4));">
                     </div>
@@ -2677,34 +2705,32 @@ function updateRelatedGrid() {
                     <h3>${sanitizeHTML(p.nombre || 'Producto')}</h3>
                     <div class="price-container">
                         <span class="price">${p.precio || ''}</span>
-                        ${p.precioAntes && p.precioAntes !== "N/A" ? `<span class="old-price">${p.precioAntes}</span>` : ''}
+                        ${precioAntiguo && precioAntiguo !== "N/A" ? `<span class="old-price">${precioAntiguo}</span>` : ''}
                         ${descuento > 0 ? `<span class="inline-discount">-${descuento}%</span>` : ''}
                     </div>
                     <a href="${sanitizeURL(p.link) || '#'}" target="_blank" class="amazon-btn" onclick="event.stopPropagation()">Ver Oferta en Amazon →</a>
                 </div>
-            </div>
         `;
     }).join('');
 
     // LÓGICA DE BOTONES INTELIGENTES
-    // Botón Siguiente: Solo se muestra si quedan productos a la derecha
     if (nextBtn) {
         if (relatedProductsIndex + RELATED_PER_PAGE < relatedProductsList.length) {
             nextBtn.style.display = 'flex';
         } else {
-            nextBtn.style.display = 'none'; // Se oculta al llegar al final
+            nextBtn.style.display = 'none'; 
         }
     }
 
-    // Botón Anterior: Solo se muestra si no estamos en el inicio (índice > 0)
     if (prevBtn) {
         if (relatedProductsIndex > 0) {
             prevBtn.style.display = 'flex';
         } else {
-            prevBtn.style.display = 'none'; // Se oculta al principio
+            prevBtn.style.display = 'none'; 
         }
     }
 }
+
 
 function nextRelatedProducts() {
     if (relatedProductsIndex + RELATED_PER_PAGE < relatedProductsList.length) {
@@ -3028,8 +3054,27 @@ function loadMoreProducts() {
 }
 
 
-        // ==================== UPDATE STATS ====================
-// ==================== UPDATE STATS ====================
+function shareProduct(e, id) {
+            e.stopPropagation(); // Evita que se abra el producto de fondo al clicar el botón
+            const producto = displayedProducts.find(p => p.id == id) || relatedProductsList.find(p => p.id == id) || currentProduct;
+            const nombre = producto ? producto.nombre : 'este chollo';
+            const url = `${window.location.origin}/producto/${id}`;
+            const text = `🔥 ¡Mira ${nombre} en SPAIN LINKS!`;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: 'SPAIN LINKS',
+                    text: text,
+                    url: url
+                }).catch(err => console.log('Error compartiendo:', err));
+            } else {
+                navigator.clipboard.writeText(`${text}\n${url}`).then(() => {
+                    alert('¡Enlace copiado al portapapeles!');
+                });
+            }
+        }
+
+       
 // ==================== UPDATE STATS ====================
 async function updateStats() {
     try {
@@ -3096,9 +3141,10 @@ async function updateStats() {
             }
             
             displayedProducts.forEach(producto => {
-                const descuento = calculateDiscount(producto.precio, producto.precioAntes);
-                const fireEmojis = getFireEmojis(descuento);
-                const tempClass = getTemperatureClass(descuento);
+                // Buscamos el precio en cualquiera de los dos formatos
+                const precioAntiguo = producto.precioAntes || producto.precio_antes;
+                const descuento = calculateDiscount(producto.precio, precioAntiguo);
+                const userVote = getUserVote(producto.id);
                 const votosNetos = (producto.votosHot || 0) - (producto.votosCold || 0);
                 
                 const card = document.createElement('div');
@@ -3118,11 +3164,20 @@ async function updateStats() {
                 img.onerror = function() { this.src = 'https://via.placeholder.com/300x200?text=Sin+imagen'; };
                 img.loading = 'lazy';
                 
-                // --- LOGO DE AMAZON (Mucho más grande: height 55px, sin fondos rojos ni porcentajes) ---
+                // --- LOGO DE AMAZON ---
                 const logoBadge = document.createElement('div');
                 logoBadge.style.cssText = 'position: absolute; bottom: 5px; left: 5px; z-index: 10; display: flex; align-items: center; justify-content: center;';
                 logoBadge.innerHTML = '<img src="/static/logoamazon.png" style="height: 65px; width: auto; object-fit: contain; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.4));">';
                 
+                // --- BOTÓN DE COMPARTIR (Arriba a la izquierda) ---
+                const shareBadge = document.createElement('div');
+                shareBadge.style.cssText = 'position: absolute; top: 10px; left: 10px; z-index: 10; background: rgba(255,255,255,0.9); border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3); color: var(--primary-color); transition: all 0.2s;';
+                shareBadge.innerHTML = '<i class="fas fa-share-alt"></i>';
+                shareBadge.onclick = (e) => shareProduct(e, producto.id);
+                shareBadge.onmouseover = () => shareBadge.style.transform = 'scale(1.1)';
+                shareBadge.onmouseout = () => shareBadge.style.transform = 'scale(1)';
+
+                imageDiv.appendChild(shareBadge);
                 imageDiv.appendChild(logoBadge);
                 imageDiv.appendChild(img);
                 card.appendChild(imageDiv);
