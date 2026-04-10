@@ -1976,20 +1976,20 @@
                         <h3><i class="fas fa-chart-line"></i> Estadísticas</h3>
                         <ul class="stats-list">
                             <li class="stats-item">
-                                <span class="stats-label">Total Ofertas</span>
-                                <span class="stats-value" id="statTotalDetail">0</span>
-                            </li>
-                            <li class="stats-item">
-                                <span class="stats-label">Ofertas Activas</span>
+                                <span class="stats-label"><i class="fas fa-box-open" style="color: var(--primary-color);"></i> Ofertas Activas</span>
                                 <span class="stats-value" id="statActiveDetail">0</span>
                             </li>
                             <li class="stats-item">
-                                <span class="stats-label">Mayor Descuento</span>
-                                <span class="stats-value danger" id="statMaxDiscountDetail">0%</span>
+                                <span class="stats-label"><i class="fas fa-calendar-day" style="color: #27ae60;"></i> Chollos de Hoy</span>
+                                <span class="stats-value" id="statTodayDetail" style="color: #27ae60; font-weight: 800;">0</span>
                             </li>
                             <li class="stats-item">
-                                <span class="stats-label">Última Actualización</span>
-                                <span class="stats-value" id="statLastUpdateDetail">--:--</span>
+                                <span class="stats-label"><i class="fas fa-bolt" style="color: var(--danger-color);"></i> Mayor Descuento</span>
+                                <span class="stats-value danger" id="statMaxDiscountDetail">-0%</span>
+                            </li>
+                            <li class="stats-item">
+                                <span class="stats-label"><i class="fas fa-users" style="color: #3498db;"></i> Votos Comunidad</span>
+                                <span class="stats-value" id="statVotesDetail" style="color: #3498db;">0</span>
                             </li>
                         </ul>
                     </div>
@@ -2993,6 +2993,7 @@ function loadMoreProducts() {
 
         // ==================== UPDATE STATS ====================
 // ==================== UPDATE STATS ====================
+// ==================== UPDATE STATS ====================
 async function updateStats() {
     try {
         const res = await fetch(`${API_BASE.replace('/api/ofertas', '')}/api/stats`);
@@ -3001,29 +3002,33 @@ async function updateStats() {
 
         if (data.activos !== undefined) {
             
-            // 1. Ofertas Activas (Buscamos todos los elementos que terminen en Sidebar)
-            // (Como usamos la misma clase/ID en ambas barras laterales, con esto sobra)
-            document.querySelectorAll('#statActiveSidebar').forEach(el => {
-                el.textContent = data.activos;
-            });
+            // 1. Ofertas Activas
+            const elActive1 = document.getElementById('statActiveSidebar');
+            const elActive2 = document.getElementById('statActiveDetail');
+            if (elActive1) elActive1.textContent = data.activos;
+            if (elActive2) elActive2.textContent = data.activos;
             
             // 2. Chollos de Hoy
-            document.querySelectorAll('#statTodaySidebar').forEach(el => {
-                el.textContent = data.chollos_hoy;
-            });
+            const elToday1 = document.getElementById('statTodaySidebar');
+            const elToday2 = document.getElementById('statTodayDetail');
+            if (elToday1) elToday1.textContent = data.chollos_hoy;
+            if (elToday2) elToday2.textContent = data.chollos_hoy;
 
-            // 3. Mayor Descuento (Calculado matemáticamente por el servidor)
-            document.querySelectorAll('#statMaxDiscountSidebar').forEach(el => {
-                el.textContent = `-${data.mayor_descuento}%`; 
-            });
+            // 3. Mayor Descuento 
+            const descText = `-${data.mayor_descuento}%`;
+            const elDesc1 = document.getElementById('statMaxDiscountSidebar');
+            const elDesc2 = document.getElementById('statMaxDiscountDetail');
+            if (elDesc1) elDesc1.textContent = descText;
+            if (elDesc2) elDesc2.textContent = descText;
             
-            // 4. Votos de la comunidad
-            document.querySelectorAll('#statVotesSidebar').forEach(el => {
-                // Formateamos para que ponga 1.200 en vez de 1200
-                el.textContent = new Intl.NumberFormat('es-ES').format(data.votos_totales);
-            });
+            // 4. Votos de la comunidad (con separador de miles)
+            const votosStr = new Intl.NumberFormat('es-ES').format(data.votos_totales);
+            const elVotos1 = document.getElementById('statVotesSidebar');
+            const elVotos2 = document.getElementById('statVotesDetail');
+            if (elVotos1) elVotos1.textContent = votosStr;
+            if (elVotos2) elVotos2.textContent = votosStr;
 
-            // 5. Actualizar contadores de categorías en el menú lateral desplegable
+            // 5. Categorías
             const categories = ['tecnologia', 'hogar', 'moda', 'belleza', 'deportes', 'juguetes', 'mascotas'];
             categories.forEach(cat => {
                 const count = data.categorias[cat] || 0; 
@@ -3035,7 +3040,6 @@ async function updateStats() {
         console.error("❌ Error cargando estadísticas:", e);
     }
 }
-
         
 
         function renderProducts() {
