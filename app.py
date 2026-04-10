@@ -93,6 +93,7 @@ def init_db():
                     id SERIAL PRIMARY KEY,
                     nombre TEXT,
                     precio TEXT,
+                    precio_antes TEXT,
                     link TEXT,
                     imagen TEXT,
                     categoria TEXT,
@@ -104,10 +105,14 @@ def init_db():
                     votos_frios INT DEFAULT 0
                 )
             """)
+
+            
             
             # Verificar columnas para actualizaciones
             c.execute("SELECT column_name FROM information_schema.columns WHERE table_name='ofertas'")
             cols = [row[0] for row in c.fetchall()]
+            if 'precio_antes' not in cols:
+                c.execute("ALTER TABLE ofertas ADD COLUMN precio_antes TEXT")
             if 'votos_calientes' not in cols:
                 c.execute("ALTER TABLE ofertas ADD COLUMN votos_calientes INT DEFAULT 0")
             if 'votos_frios' not in cols:
@@ -170,12 +175,12 @@ def add_oferta():
     try:
         with get_db_connection() as conn:
             c = conn.cursor()
+            # CAMBIA EL c.execute POR ESTE:
             c.execute("""
-                INSERT INTO ofertas (nombre, precio, link, imagen, categoria, descripcion, activo)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (data.get("nombre"), data.get("precio"), data.get("link"), data.get("imagen"),
-                  data.get("categoria"), data.get("descripcion", ""), data.get("activo", True)))
-            conn.commit()
+                INSERT INTO ofertas (nombre, precio, precio_antes, link, imagen, categoria, descripcion, activo)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """, (data.get("nombre"), data.get("precio"), data.get("precio_antes"), data.get("link"),
+                  data.get("imagen"), data.get("categoria"), data.get("descripcion", ""), data.get("activo", True)))
         return jsonify({"status": "ok"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -225,15 +230,16 @@ def get_ofertas():
             
             # Obtener solo los productos de la página solicitada
             c.execute(f"""
-                SELECT id, nombre, precio, link, imagen, categoria, descripcion, 
+                SELECT id, nombre, precio, precio_antes, link, imagen, categoria, descripcion, 
                        activo, fecha_creacion, votos_calientes, votos_frios 
                 FROM ofertas {where} {order_by} LIMIT %s OFFSET %s
             """, tuple(params) + (limit, offset))
+
             rows = c.fetchall()
             
-        res = [{"id": r[0], "nombre": r[1], "precio": r[2], "link": r[3], "imagen": r[4], 
-                "categoria": r[5], "descripcion": r[6], "activo": r[7], 
-                "fecha_creacion": str(r[8]), "votos_calientes": r[9], "votos_frios": r[10]} for r in rows]
+       res = [{"id": r[0], "nombre": r[1], "precio": r[2], "precio_antes": r[3], "link": r[4], 
+               "imagen": r[5], "categoria": r[6], "descripcion": r[7], "activo": r[8], 
+               "fecha_creacion": str(r[9]), "votos_calientes": r[10], "votos_frios": r[11]} for r in rows]
                 
         return jsonify({"ofertas": res, "total": total})
     except Exception as e:
