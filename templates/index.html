@@ -3107,22 +3107,8 @@ async function updateStats() {
                 logoBadge.innerHTML = '<img src="/static/logoamazon.png" style="height: 55px; width: auto; object-fit: contain; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.4));">';
                 
                 // Solo añadimos el logo y la imagen principal al contenedor (CERO FUEGOS, CERO PORCENTAJES)
+                // Solo añadimos el logo y la imagen principal al contenedor (CERO FUEGOS, CERO PORCENTAJES)
                 imageDiv.appendChild(logoBadge);
-                imageDiv.appendChild(img);
-                card.appendChild(imageDiv);
-                
-                const tempBadge = document.createElement('div');
-                tempBadge.className = `temperature-badge ${tempClass}`;
-                tempBadge.innerHTML = `${fireEmojis} ${votosNetos}°`;
-                imageDiv.appendChild(tempBadge);
-                
-                if (descuento > 0) {
-                    const badge = document.createElement('span');
-                    badge.className = 'discount-badge';
-                    badge.textContent = `-${descuento}%`;
-                    imageDiv.appendChild(badge);
-                }
-                
                 imageDiv.appendChild(img);
                 card.appendChild(imageDiv);
                 
