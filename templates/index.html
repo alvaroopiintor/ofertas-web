@@ -1017,13 +1017,15 @@
         
         .product-detail-price-section {
             display: flex;
-            align-items: baseline;
-            gap: 20px;
-            flex-wrap: wrap;
+            align-items: center;
+            gap: 15px;
             padding: 25px;
             background: var(--bg-color);
             border-radius: 15px;
             margin-bottom: 25px;
+            flex-wrap: nowrap; /* ESTO FUERZA LA MISMA LÍNEA */
+            white-space: nowrap;
+            overflow-x: auto;
         }
         
         .product-detail-price {
@@ -2397,48 +2399,56 @@
         }
 
         // ==================== RENDER FEATURED PRODUCTS (SIDEBAR) ====================
-        function renderFeaturedProducts() {
+        async function renderFeaturedProducts() {
             const list = document.getElementById('featuredProductsList');
             const listDetail = document.getElementById('topDealsListDetail');
             
             if (!list && !listDetail) return;
             
-            // AQUI SE AÑADIÓ EL FILTRO: (!currentProduct || p.id !== currentProduct.id)
-            const featured = [...allProducts]
-                .filter(p => p.activo !== false && (!currentProduct || p.id !== currentProduct.id))
-                .sort((a, b) => {
-                    const descA = calculateDiscount(a.precio, a.precioAntes);
-                    const descB = calculateDiscount(b.precio, b.precioAntes);
-                    return descB - descA;
-                })
-                .slice(0, 3);
-            
-            if (featured.length === 0) {
-                const emptyHTML = '<li style="text-align: center; color: var(--text-muted); padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Cargando...</li>';
-                if (list) list.innerHTML = emptyHTML;
-                if (listDetail) listDetail.innerHTML = emptyHTML;
-                return;
+            try {
+                // Pedimos al servidor los 3 productos con más descuento
+                const response = await fetch(`${API_BASE}?sort=discount-desc&limit=3&activos=true`);
+                if (!response.ok) throw new Error('Error al cargar destacados');
+                const data = await response.json();
+                
+                let featured = data.ofertas;
+                
+                // Si estamos viendo un producto, lo ocultamos de los destacados para no repetirlo
+                if (currentProduct) {
+                    featured = featured.filter(p => p.id !== currentProduct.id).slice(0, 3);
+                }
+
+                if (featured.length === 0) {
+                    const emptyHTML = '<li style="text-align: center; color: var(--text-muted); padding: 20px;">No hay destacados hoy</li>';
+                    if (list) list.innerHTML = emptyHTML;
+                    if (listDetail) listDetail.innerHTML = emptyHTML;
+                    return;
+                }
+
+                const html = featured.map((p, index) => {
+                    // Ojo: Desde la API el precio antiguo se llama precio_antes
+                    const descuento = calculateDiscount(p.precio, p.precio_antes); 
+                    return `
+                        <li class="featured-product-item" onclick="showProductDetailPage(${JSON.stringify(p).replace(/"/g, '&quot;')})">
+                            <div style="position: relative;">
+                                <img src="${sanitizeURL(p.imagen) || 'https://via.placeholder.com/70'}" alt="${p.nombre || 'Producto'}">
+                                <span style="position: absolute; top: -5px; left: -5px; background: var(--danger-color); color: #fff; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;">${index + 1}</span>
+                            </div>
+                            <div class="featured-product-info">
+                                <div class="featured-product-title">${sanitizeHTML(p.nombre || 'Producto')}</div>
+                                <div class="featured-product-price">${p.precio || 'N/A'}</div>
+                                ${descuento > 0 ? `<span class="featured-product-discount">-${descuento}%</span>` : ''}
+                            </div>
+                        </li>
+                    `;
+                }).join('');
+                
+                if (list) list.innerHTML = html;
+                if (listDetail) listDetail.innerHTML = html;
+                
+            } catch (e) {
+                console.error("❌ Error cargando destacados:", e);
             }
-            
-            const html = featured.map((p, index) => {
-                const descuento = calculateDiscount(p.precio, p.precioAntes);
-                return `
-                    <li class="featured-product-item" onclick="showProductDetailPage(${JSON.stringify(p).replace(/"/g, '&quot;')})">
-                        <div style="position: relative;">
-                            <img src="${sanitizeURL(p.imagen) || 'https://via.placeholder.com/70'}" alt="${p.nombre || 'Producto'}">
-                            <span style="position: absolute; top: -5px; left: -5px; background: var(--danger-color); color: #fff; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;">${index + 1}</span>
-                        </div>
-                        <div class="featured-product-info">
-                            <div class="featured-product-title">${sanitizeHTML(p.nombre || 'Producto')}</div>
-                            <div class="featured-product-price">${p.precio || 'N/A'}</div>
-                            ${descuento > 0 ? `<span class="featured-product-discount">-${descuento}%</span>` : ''}
-                        </div>
-                    </li>
-                `;
-            }).join('');
-            
-            if (list) list.innerHTML = html;
-            if (listDetail) listDetail.innerHTML = html;
         }
 
         // ==================== RENDER DESCRIPTION ====================
@@ -2640,8 +2650,8 @@ function updateRelatedGrid() {
         return `
             <div class="product-card" onclick="showProductDetailPage(${JSON.stringify(p).replace(/"/g, '&quot;')})">
                 <div class="product-card-image">
-                    <div style="position: absolute; bottom: 10px; left: 10px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 10;">
-                        <img src="/static/logo.png" style="height: 25px; width: auto; object-fit: contain;">
+                    <div style="position: absolute; bottom: 10px; left: 10px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 10; display: flex; align-items: center; justify-content: center;">
+                        <img src="/static/logoamazon.png" style="height: 25px; width: auto; object-fit: contain; margin: 0; padding: 0;">
                     </div>
                     <img src="${sanitizeURL(p.imagen) || 'https://via.placeholder.com/300x200?text=Producto'}" alt="${p.nombre}" loading="lazy">
                 </div>
@@ -2653,7 +2663,7 @@ function updateRelatedGrid() {
                         ${p.precioAntes && p.precioAntes !== "N/A" ? `<span class="old-price">${p.precioAntes}</span>` : ''}
                         ${descuento > 0 ? `<span class="inline-discount">-${descuento}%</span>` : ''}
                     </div>
-                    <a href="${sanitizeURL(p.link) || '#'}" target="_blank" class="amazon-btn" onclick="event.stopPropagation()">Ver Oferta →</a>
+                    <a href="${sanitizeURL(p.link) || '#'}" target="_blank" class="amazon-btn" onclick="event.stopPropagation()">Ver Oferta en Amazon →</a>
                 </div>
             </div>
         `;
@@ -2914,8 +2924,13 @@ function prevRelatedProducts() {
             currentSearch = ''; 
             document.getElementById('searchInput').value = ''; 
             
-            showHome(null, false); // <--- Esto fuerza ir a la pantalla principal
-            loadProducts(true); 
+            // Iluminamos el botón de arriba correspondiente
+            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+            const btnArriba = document.querySelector(`.category-btn[data-category="${category}"]`);
+            if (btnArriba) btnArriba.classList.add('active');
+
+            showHome(null, false); // Forzamos ir a la vista principal (inicio)
+            loadProducts(true);    // Cargamos los productos de esa categoría
             window.history.pushState(null, "", "/");
         }
 
@@ -3088,12 +3103,13 @@ async function updateStats() {
                 
                // Quitar Prime, Flash y Fueguitos. Solo dejamos la imagen y el logo
                 
-                // 1. Añadimos el logo de Amazon/SpainLinks en la esquina inferior izquierda
+                // 1. Añadimos SOLO el logo de Amazon en la esquina inferior izquierda
                 const logoBadge = document.createElement('div');
                 logoBadge.style.cssText = 'position: absolute; bottom: 10px; left: 10px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 10; display: flex; align-items: center; justify-content: center;';
-                logoBadge.innerHTML = '<img src="/static/logo.png" style="height: 25px; width: auto; object-fit: contain;">';
+                logoBadge.innerHTML = '<img src="/static/logoamazon.png" style="height: 25px; width: auto; object-fit: contain; margin: 0; padding: 0;">';
                 imageDiv.appendChild(logoBadge);
                 
+                // NO AÑADIMOS NI FUEGOS, NI PORCENTAJES SOBRE LA IMAGEN
                 imageDiv.appendChild(img);
                 card.appendChild(imageDiv);
                 
