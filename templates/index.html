@@ -2934,15 +2934,7 @@ function loadMoreProducts() {
             });
         }
 
-        function loadMoreProducts() {
-            // 1. Aumentamos la página actual local
-            currentPage++;
-            
-            // 2. Volvemos a cortar el array y dibujar los productos
-            applyFiltersAndSort();
-            
-            logDebug(`✅ Mostrando página ${currentPage}`);
-        }
+        
 
         function renderProducts() {
             const grid = document.getElementById('productsGrid');
