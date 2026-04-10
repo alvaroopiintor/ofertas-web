@@ -829,6 +829,26 @@
             color: var(--text-muted); 
             font-size: 1rem; 
         }
+
+/* Estilo para el descuento verde en línea */
+.inline-discount {
+    background-color: #e6f4ea; /* Fondo verde claro */
+    color: #137333; /* Texto verde oscuro */
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+/* Asegurar que la caja del precio alinee todo bien */
+.product-card .price-container {
+    display: flex;
+    align-items: center; /* Alineación vertical al centro */
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0;
+}
         
         .store-badge {
             display: inline-block;
@@ -2231,9 +2251,10 @@
             // Precio anterior y descuento
             const detailOldPrice = document.getElementById('detailOldPrice');
             const detailDiscount = document.getElementById('detailDiscount');
+
             if (detailOldPrice) {
-                if (producto.precioAntes) {
-                    detailOldPrice.textContent = producto.precioAntes;
+                if (producto.precio_antes && producto.precio_antes !== "N/A") {
+                    detailOldPrice.textContent = producto.precio_antes;
                     detailOldPrice.style.display = 'inline';
                 } else {
                     detailOldPrice.style.display = 'none';
@@ -2241,6 +2262,9 @@
             }
             if (detailDiscount) {
                 detailDiscount.textContent = descuento > 0 ? `-${descuento}%` : '';
+                // Podemos usar los mismos colores verdes para el detalle:
+                detailDiscount.style.backgroundColor = '#e6f4ea';
+                detailDiscount.style.color = '#137333';
                 detailDiscount.style.display = descuento > 0 ? 'inline' : 'none';
             }
             
@@ -3105,19 +3129,28 @@ async function updateStats() {
                 
                 const priceContainer = document.createElement('div');
                 priceContainer.className = 'price-container';
-                
+
                 const price = document.createElement('span');
                 price.className = 'price';
                 price.textContent = producto.precio || '';
                 priceContainer.appendChild(price);
-                
-                if (producto.precioAntes) {
+
+                // AÑADIMOS LÓGICA DEL PRECIO ANTERIOR Y PORCENTAJE
+                if (producto.precio_antes && producto.precio_antes !== "N/A") {
                     const oldPrice = document.createElement('span');
                     oldPrice.className = 'old-price';
-                    oldPrice.textContent = producto.precioAntes;
+                    oldPrice.textContent = producto.precio_antes;
                     priceContainer.appendChild(oldPrice);
+    
+                    // Si hay descuento, añadimos la etiqueta verde
+                    if (descuento > 0) {
+                        const inlineDiscount = document.createElement('span');
+                        inlineDiscount.className = 'inline-discount';
+                        inlineDiscount.textContent = `-${descuento}%`;
+                        priceContainer.appendChild(inlineDiscount);
+                   }
                 }
-                
+
                 contentDiv.appendChild(priceContainer);
                 
                 const voteSection = document.createElement('div');
