@@ -1766,20 +1766,20 @@
             <h3><i class="fas fa-chart-line"></i> Estadísticas</h3>
             <ul class="stats-list">
                 <li class="stats-item">
-                    <span class="stats-label">Total Ofertas</span>
-                    <span class="stats-value" id="statTotalSidebar">0</span>
-                </li>
-                <li class="stats-item">
-                    <span class="stats-label">Ofertas Activas</span>
+                    <span class="stats-label"><i class="fas fa-box-open" style="color: var(--primary-color);"></i> Ofertas Activas</span>
                     <span class="stats-value" id="statActiveSidebar">0</span>
                 </li>
                 <li class="stats-item">
-                    <span class="stats-label">Mayor Descuento</span>
-                    <span class="stats-value danger" id="statMaxDiscountSidebar">0%</span>
+                    <span class="stats-label"><i class="fas fa-calendar-day" style="color: #27ae60;"></i> Chollos de Hoy</span>
+                    <span class="stats-value" id="statTodaySidebar" style="color: #27ae60; font-weight: 800;">0</span>
                 </li>
                 <li class="stats-item">
-                    <span class="stats-label">Última Actualización</span>
-                    <span class="stats-value" id="statLastUpdateSidebar">--:--</span>
+                    <span class="stats-label"><i class="fas fa-bolt" style="color: var(--danger-color);"></i> Mayor Descuento</span>
+                    <span class="stats-value danger" id="statMaxDiscountSidebar">-0%</span>
+                </li>
+                <li class="stats-item">
+                    <span class="stats-label"><i class="fas fa-users" style="color: #3498db;"></i> Votos Comunidad</span>
+                    <span class="stats-value" id="statVotesSidebar" style="color: #3498db;">0</span>
                 </li>
             </ul>
         </div>
@@ -2992,42 +2992,41 @@ function loadMoreProducts() {
 
 
         // ==================== UPDATE STATS ====================
-        // ==================== UPDATE STATS ====================
+// ==================== UPDATE STATS ====================
 async function updateStats() {
     try {
         const res = await fetch(`${API_BASE.replace('/api/ofertas', '')}/api/stats`);
         if (!res.ok) throw new Error('Error al conectar con stats');
         const data = await res.json();
 
-        if (data.total !== undefined) {
-            // 1. Actualizar Totales
-            const elsTotal = ['statTotal', 'statTotalSidebar', 'statTotalDetail'];
-            elsTotal.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.textContent = data.total;
-            });
-
-            // 2. Actualizar Activos
-            const elsActive = ['statActive', 'statActiveSidebar', 'statActiveDetail'];
-            elsActive.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.textContent = data.activos;
+        if (data.activos !== undefined) {
+            
+            // 1. Ofertas Activas (Buscamos todos los elementos que terminen en Sidebar)
+            // (Como usamos la misma clase/ID en ambas barras laterales, con esto sobra)
+            document.querySelectorAll('#statActiveSidebar').forEach(el => {
+                el.textContent = data.activos;
             });
             
-            // 3. Mayor Descuento (Icono de fuego, ya que no guardamos precio_antes en BD)
-            const elsDiscount = ['statMaxDiscount', 'statMaxDiscountSidebar', 'statMaxDiscountDetail'];
-            elsDiscount.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.textContent = '🔥'; 
+            // 2. Chollos de Hoy
+            document.querySelectorAll('#statTodaySidebar').forEach(el => {
+                el.textContent = data.chollos_hoy;
             });
 
-            // 4. Actualizar contadores de categorías en el menú lateral
+            // 3. Mayor Descuento (Calculado matemáticamente por el servidor)
+            document.querySelectorAll('#statMaxDiscountSidebar').forEach(el => {
+                el.textContent = `-${data.mayor_descuento}%`; 
+            });
+            
+            // 4. Votos de la comunidad
+            document.querySelectorAll('#statVotesSidebar').forEach(el => {
+                // Formateamos para que ponga 1.200 en vez de 1200
+                el.textContent = new Intl.NumberFormat('es-ES').format(data.votos_totales);
+            });
+
+            // 5. Actualizar contadores de categorías en el menú lateral desplegable
             const categories = ['tecnologia', 'hogar', 'moda', 'belleza', 'deportes', 'juguetes', 'mascotas'];
             categories.forEach(cat => {
-                // Buscamos cuántos hay de esta categoría en el diccionario que mandó el servidor
-                // Si la categoría no existe en el dict (ej. hay 0 productos), ponemos 0 por defecto
                 const count = data.categorias[cat] || 0; 
-                
                 const elSidebar = document.getElementById(`count-${cat}-sidebar`);
                 if (elSidebar) elSidebar.textContent = count;
             });
