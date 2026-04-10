@@ -2519,74 +2519,109 @@ function loadMoreComments() {
         }
 
 
-        function renderDetailRelated(producto) {
-            // Guardamos todos los relacionados
-            relatedProductsList = allProducts.filter(p => p.categoria === producto.categoria && p.id !== producto.id);
-            // Reiniciamos al principio de la lista
-            relatedProductsIndex = 0;
-            // Renderizamos
-            updateRelatedGrid();
-        }
+        
+// ==================== RELATED PRODUCTS (CARRUSEL) ====================
 
-        function updateRelatedGrid() {
-            const relatedGrid = document.getElementById('detailRelatedGrid');
-            const nextBtn = document.getElementById('nextRelatedBtn');
-            
-            if (!relatedGrid) return;
-            
-            if (relatedProductsList.length === 0) {
-                relatedGrid.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">No hay ofertas relacionadas en esta categoría</p>';
-                if (nextBtn) nextBtn.style.display = 'none';
-                return;
-            }
-            
-            // Reiniciar animación quitando y añadiendo la clase
-            relatedGrid.classList.remove('carousel-animate');
-            void relatedGrid.offsetWidth; // Truco para forzar reflow
-            relatedGrid.classList.add('carousel-animate');
-            
-            const visibleProducts = relatedProductsList.slice(relatedProductsIndex, relatedProductsIndex + RELATED_PER_PAGE);
-            
-            relatedGrid.innerHTML = visibleProducts.map(p => {
-                const descuento = calculateDiscount(p.precio, p.precioAntes);
-                const votosNetos = (p.votosHot || 0) - (p.votosCold || 0);
-                return `
-                    <div class="product-card" onclick="showProductDetailPage(${JSON.stringify(p).replace(/"/g, '&quot;')})">
-                        <div class="product-card-image">
-                            <img src="${sanitizeURL(p.imagen) || 'https://via.placeholder.com/300x200?text=Producto'}" alt="${p.nombre}" loading="lazy">
-                            ${descuento > 0 ? `<span class="discount-badge">-${descuento}%</span>` : ''}
-                            <div class="temperature-badge ${getTemperatureClass(descuento)}">${votosNetos}°</div>
-                        </div>
-                        <div class="product-card-content">
-                            <span class="store-badge">${p.categoria || 'General'}</span>
-                            <h3>${sanitizeHTML(p.nombre || 'Producto')}</h3>
-                            <div class="price-container">
-                                <span class="price">${p.precio || ''}</span>
-                            </div>
-                            <a href="${sanitizeURL(p.link) || '#'}" target="_blank" class="amazon-btn" onclick="event.stopPropagation()">Ver Oferta →</a>
-                        </div>
+async function renderDetailRelated(producto) {
+    const relatedGrid = document.getElementById('detailRelatedGrid');
+    if (relatedGrid) {
+        relatedGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 30px;"><i class="fas fa-spinner fa-spin"></i> Buscando chollos similares...</div>';
+    }
+
+    try {
+        // Le pedimos al servidor 12 productos de esta misma categoría
+        const response = await fetch(`${API_BASE}?categoria=${encodeURIComponent(producto.categoria)}&limit=12&activos=true`);
+        if (!response.ok) throw new Error('Error al cargar relacionadas');
+        const data = await response.json();
+
+        // Filtramos para NO incluir el producto que el usuario ya está viendo
+        relatedProductsList = data.ofertas
+            .filter(p => p.id !== producto.id)
+            .map(p => ({
+                ...p,
+                votosHot: p.votos_calientes || 0,
+                votosCold: p.votos_frios || 0
+            }));
+
+        // Reiniciamos el índice del carrusel al principio
+        relatedProductsIndex = 0;
+        
+        // Dibujamos las tarjetas
+        updateRelatedGrid();
+        
+    } catch (error) {
+        console.error("❌ Error cargando relacionadas:", error);
+        if (relatedGrid) {
+            relatedGrid.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">No hay más ofertas en esta categoría ahora mismo.</p>';
+        }
+    }
+}
+
+function updateRelatedGrid() {
+    const relatedGrid = document.getElementById('detailRelatedGrid');
+    const nextBtn = document.getElementById('nextRelatedBtn');
+    
+    if (!relatedGrid) return;
+    
+    if (relatedProductsList.length === 0) {
+        relatedGrid.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">No hay ofertas relacionadas en esta categoría</p>';
+        if (nextBtn) nextBtn.style.display = 'none';
+        return;
+    }
+    
+    // Reiniciar animación del carrusel
+    relatedGrid.classList.remove('carousel-animate');
+    void relatedGrid.offsetWidth; // Truco visual para reiniciar animaciones CSS
+    relatedGrid.classList.add('carousel-animate');
+    
+    // Cortamos los 3 productos que tocan ver en este momento
+    const visibleProducts = relatedProductsList.slice(relatedProductsIndex, relatedProductsIndex + RELATED_PER_PAGE);
+    
+    relatedGrid.innerHTML = visibleProducts.map(p => {
+        const descuento = calculateDiscount(p.precio, p.precioAntes);
+        const votosNetos = (p.votosHot || 0) - (p.votosCold || 0);
+        return `
+            <div class="product-card" onclick="showProductDetailPage(${JSON.stringify(p).replace(/"/g, '&quot;')})">
+                <div class="product-card-image">
+                    <img src="${sanitizeURL(p.imagen) || 'https://via.placeholder.com/300x200?text=Producto'}" alt="${p.nombre}" loading="lazy">
+                    ${descuento > 0 ? `<span class="discount-badge">-${descuento}%</span>` : ''}
+                    <div class="temperature-badge ${getTemperatureClass(descuento)}">${votosNetos >= 0 ? '+' : ''}${votosNetos}°</div>
+                </div>
+                <div class="product-card-content">
+                    <span class="store-badge">${p.categoria || 'General'}</span>
+                    <h3>${sanitizeHTML(p.nombre || 'Producto')}</h3>
+                    <div class="price-container">
+                        <span class="price">${p.precio || ''}</span>
                     </div>
-                `;
-            }).join('');
+                    <a href="${sanitizeURL(p.link) || '#'}" target="_blank" class="amazon-btn" onclick="event.stopPropagation()">Ver Oferta →</a>
+                </div>
+            </div>
+        `;
+    }).join('');
 
-            // Controlamos si se muestra el botón de Siguiente
-            if (nextBtn) {
-                if (relatedProductsList.length <= RELATED_PER_PAGE) {
-                    nextBtn.style.display = 'none';
-                } else {
-                    nextBtn.style.display = 'flex';
-                }
-            }
+    // Controlamos si se muestra el botón de Siguiente (solo si hay más de 3 productos relacionados en total)
+    if (nextBtn) {
+        if (relatedProductsList.length <= RELATED_PER_PAGE) {
+            nextBtn.style.display = 'none';
+        } else {
+            nextBtn.style.display = 'flex';
         }
+    }
+}
 
-        function nextRelatedProducts() {
-            relatedProductsIndex += RELATED_PER_PAGE;
-            // Si pasamos el final, volvemos a empezar
-            if (relatedProductsIndex >= relatedProductsList.length) {
-                relatedProductsIndex = 0;
-            }
-            updateRelatedGrid();
-        }
+function nextRelatedProducts() {
+    // Avanzamos 3 productos
+    relatedProductsIndex += RELATED_PER_PAGE;
+    
+    // Si al avanzar nos salimos del total de productos, volvemos a empezar desde el principio (bucle infinito)
+    if (relatedProductsIndex >= relatedProductsList.length) {
+        relatedProductsIndex = 0;
+    }
+    
+    // Volvemos a dibujar
+    updateRelatedGrid();
+}
+
 
         // ==================== SHOW HOME ====================
         function showHome(event) {
