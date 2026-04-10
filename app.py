@@ -237,7 +237,7 @@ def get_ofertas():
 
             rows = c.fetchall()
             
-       res = [{"id": r[0], "nombre": r[1], "precio": r[2], "precio_antes": r[3], "link": r[4], 
+        res = [{"id": r[0], "nombre": r[1], "precio": r[2], "precio_antes": r[3], "link": r[4], 
                "imagen": r[5], "categoria": r[6], "descripcion": r[7], "activo": r[8], 
                "fecha_creacion": str(r[9]), "votos_calientes": r[10], "votos_frios": r[11]} for r in rows]
                 
