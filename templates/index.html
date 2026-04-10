@@ -1849,7 +1849,8 @@
                 <button class="sort-btn active" data-sort="default">Relevancia</button>
                 <button class="sort-btn" data-sort="price-asc">Precio menor</button>
                 <button class="sort-btn" data-sort="price-desc">Precio mayor</button>
-                <button class="sort-btn" data-sort="discount">Mayor descuento</button>
+                <button class="sort-btn" data-sort="discount-desc">Mayor descuento</button>
+                <button class="sort-btn" data-sort="discount-asc">Menor descuento</button>
                 <button class="sort-btn" data-sort="votes">Más votadas</button>
             </div>
 
@@ -1964,23 +1965,10 @@
                 
                 <aside class="sidebar-detail">
                     <div class="sidebar-widget">
-                        <h3><i class="fas fa-chart-line"></i> Estadísticas</h3>
-                        <ul class="stats-list">
-                            <li class="stats-item">
-                                <span class="stats-label"><i class="fas fa-box-open" style="color: var(--primary-color);"></i> Ofertas Activas</span>
-                                <span class="stats-value" id="statActiveDetail">0</span>
-                            </li>
-                            <li class="stats-item">
-                                <span class="stats-label"><i class="fas fa-calendar-day" style="color: #27ae60;"></i> Chollos de Hoy</span>
-                                <span class="stats-value" id="statTodayDetail" style="color: #27ae60; font-weight: 800;">0</span>
-                            </li>
-                            <li class="stats-item">
-                                <span class="stats-label"><i class="fas fa-bolt" style="color: var(--danger-color);"></i> Mayor Descuento</span>
-                                <span class="stats-value danger" id="statMaxDiscountDetail">-0%</span>
-                            </li>
-                            <li class="stats-item">
-                                <span class="stats-label"><i class="fas fa-users" style="color: #3498db;"></i> Votos Comunidad</span>
-                                <span class="stats-value" id="statVotesDetail" style="color: #3498db;">0</span>
+                        <h3><i class="fas fa-trophy"></i> 🔥 Destacados del Día</h3>
+                        <ul class="featured-products-list" id="topDealsListDetail">
+                            <li style="text-align: center; color: var(--text-muted); padding: 20px;">
+                                <i class="fas fa-spinner fa-spin"></i> Cargando...
                             </li>
                         </ul>
                     </div>
@@ -2649,19 +2637,21 @@ function updateRelatedGrid() {
     
     relatedGrid.innerHTML = visibleProducts.map(p => {
         const descuento = calculateDiscount(p.precio, p.precioAntes);
-        const votosNetos = (p.votosHot || 0) - (p.votosCold || 0);
         return `
             <div class="product-card" onclick="showProductDetailPage(${JSON.stringify(p).replace(/"/g, '&quot;')})">
                 <div class="product-card-image">
+                    <div style="position: absolute; bottom: 10px; left: 10px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 10;">
+                        <img src="/static/logo.png" style="height: 25px; width: auto; object-fit: contain;">
+                    </div>
                     <img src="${sanitizeURL(p.imagen) || 'https://via.placeholder.com/300x200?text=Producto'}" alt="${p.nombre}" loading="lazy">
-                    ${descuento > 0 ? `<span class="discount-badge">-${descuento}%</span>` : ''}
-                    <div class="temperature-badge ${getTemperatureClass(descuento)}">${votosNetos >= 0 ? '+' : ''}${votosNetos}°</div>
                 </div>
                 <div class="product-card-content">
                     <span class="store-badge">${p.categoria || 'General'}</span>
                     <h3>${sanitizeHTML(p.nombre || 'Producto')}</h3>
                     <div class="price-container">
                         <span class="price">${p.precio || ''}</span>
+                        ${p.precioAntes && p.precioAntes !== "N/A" ? `<span class="old-price">${p.precioAntes}</span>` : ''}
+                        ${descuento > 0 ? `<span class="inline-discount">-${descuento}%</span>` : ''}
                     </div>
                     <a href="${sanitizeURL(p.link) || '#'}" target="_blank" class="amazon-btn" onclick="event.stopPropagation()">Ver Oferta →</a>
                 </div>
@@ -2920,13 +2910,14 @@ function prevRelatedProducts() {
         }
 
        function setCategory(category) {
-         currentCategory = category;
-         currentSearch = ''; // Limpiar búsqueda al cambiar categoría
-         document.getElementById('searchInput').value = ''; 
-         loadProducts(true); // Recargar desde página 1
-         window.history.pushState(null, "", "/");
-         scrollToCategories();
-       }
+            currentCategory = category;
+            currentSearch = ''; 
+            document.getElementById('searchInput').value = ''; 
+            
+            showHome(null, false); // <--- Esto fuerza ir a la pantalla principal
+            loadProducts(true); 
+            window.history.pushState(null, "", "/");
+        }
 
         function setSort(sort) {
             currentSort = sort;
@@ -3095,22 +3086,16 @@ async function updateStats() {
                 img.onerror = function() { this.src = 'https://via.placeholder.com/300x200?text=Sin+imagen'; };
                 img.loading = 'lazy';
                 
-                const badgesContainer = document.createElement('div');
-                badgesContainer.className = 'badges-container';
+               // Quitar Prime, Flash y Fueguitos. Solo dejamos la imagen y el logo
                 
-                if (descuento >= 50) {
-                    const flashBadge = document.createElement('span');
-                    flashBadge.className = 'badge badge-flash';
-                    flashBadge.innerHTML = '<i class="fas fa-bolt"></i> Flash';
-                    badgesContainer.appendChild(flashBadge);
-                }
+                // 1. Añadimos el logo de Amazon/SpainLinks en la esquina inferior izquierda
+                const logoBadge = document.createElement('div');
+                logoBadge.style.cssText = 'position: absolute; bottom: 10px; left: 10px; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 10; display: flex; align-items: center; justify-content: center;';
+                logoBadge.innerHTML = '<img src="/static/logo.png" style="height: 25px; width: auto; object-fit: contain;">';
+                imageDiv.appendChild(logoBadge);
                 
-                const primeBadge = document.createElement('span');
-                primeBadge.className = 'badge badge-prime';
-                primeBadge.innerHTML = '<i class="fab fa-amazon"></i> Prime';
-                badgesContainer.appendChild(primeBadge);
-                
-                imageDiv.appendChild(badgesContainer);
+                imageDiv.appendChild(img);
+                card.appendChild(imageDiv);
                 
                 const tempBadge = document.createElement('div');
                 tempBadge.className = `temperature-badge ${tempClass}`;
