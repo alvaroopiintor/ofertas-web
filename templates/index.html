@@ -791,6 +791,29 @@
             font-size: 12px;
             font-weight: bold;
         }
+
+     
+        .favorite-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 10;
+            background: rgba(255,255,255,0.9);
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+        .favorite-btn:hover { transform: scale(1.1); }
+        .favorite-btn.is-favorite { color: var(--danger-color); }
+
+
         
         .product-card-content {
             padding: 20px;
@@ -1803,6 +1826,14 @@
                     <span>Más Votadas</span>
                 </a>
             </div>
+
+            <div class="sidebar-item">
+                <a href="#" class="sidebar-btn" onclick="showFavorites(event); toggleSidebar()">
+                    <i class="fas fa-heart" style="color: var(--danger-color);"></i>
+                    <span>Mis Favoritos</span>
+                </a>
+            </div>
+ 
             
             <div class="sidebar-item">
                 <a href="#" class="sidebar-btn" onclick="showSection(event, 'blog'); toggleSidebar()">
@@ -2360,11 +2391,119 @@
         }
 
 
+        let userFavorites = new Set(); // Guardaremos aquí los IDs de los favoritos del usuario
+
+        async function fetchUserFavorites() {
+            if (!authToken) return;
+            try {
+                const res = await fetch('/api/favoritos', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await res.json();
+                if (data.favoritos) {
+                    userFavorites = new Set(data.favoritos.map(f => f.id));
+                    renderProducts(); // Refrescamos la cuadrícula para pintar los corazones
+                }
+            } catch (e) { console.error("Error cargando favoritos:", e); }
+        }
+
+        async function toggleFavorite(e, productId) {
+            e.stopPropagation();
+            if (!authToken) {
+                alert("Inicia sesión para guardar tus favoritos ❤️");
+                openAuthModal();
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/ofertas/${productId}/favorito`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await res.json();
+                if (data.status === 'ok') {
+                    if (data.accion === 'añadido') userFavorites.add(productId);
+                    else userFavorites.delete(productId);
+                    renderProducts(); // Actualizamos visualmente
+                    if (currentProduct && currentProduct.id === productId) renderDetailFavoriteBtn();
+                }
+            } catch (e) { alert("Error al conectar con el servidor"); }
+        }
+
+
+        // --- FUNCIÓN PARA MOSTRAR LA LISTA DE FAVORITOS ---
+        async function showFavorites(e) {
+            if (e) e.preventDefault();
+            
+            // 1. Verificamos si el usuario está logueado
+            if (!authToken) {
+                alert("Inicia sesión para ver tu lista de favoritos ❤️");
+                openAuthModal();
+                return;
+            }
+            
+            showLoading(); // Mostramos el icono de carga
+            try {
+                // 2. Pedimos los favoritos al servidor
+                const res = await fetch('/api/favoritos', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await res.json();
+                
+                // 3. Transformamos los datos para que el diseño sea igual al de la home
+                displayedProducts = data.favoritos.map(p => ({
+                    ...p,
+                    precioAntes: p.precio_antes,
+                    votosHot: p.votos_calientes || 0,
+                    votosCold: p.votos_frios || 0,
+                    timestamp: p.fecha_creacion || new Date()
+                }));
+                
+                // 4. Dibujamos los productos en el grid
+                renderProducts();
+                
+                // Ocultamos el botón de "Cargar más" ya que aquí mostramos todos de golpe
+                document.getElementById('loadMoreBtn').style.display = 'none';
+                
+                // Cambiamos el estado visual de los menús
+                document.querySelectorAll('.sidebar-btn').forEach(btn => btn.classList.remove('active'));
+                
+                logDebug("❤️ Lista de favoritos cargada");
+            } catch (err) {
+                console.error("Error cargando favoritos:", err);
+                showError();
+            }
+        }
+
+
+function renderDetailFavoriteBtn() {
+            const container = document.querySelector('.product-detail-info-container');
+            if (!container || !currentProduct) return;
+
+            // Borramos el botón viejo si ya existe
+            const oldBtn = document.getElementById('detailFavBtn');
+            if (oldBtn) oldBtn.remove();
+
+            const isFav = userFavorites.has(currentProduct.id);
+            const favBtn = document.createElement('button');
+            favBtn.id = 'detailFavBtn';
+            favBtn.style.cssText = 'background: none; border: 2px solid var(--border-color); border-radius: 12px; padding: 15px; cursor: pointer; font-size: 20px; transition: all 0.2s; margin-bottom: 25px; width: 60px; margin-left: 10px; vertical-align: top;';
+            favBtn.innerHTML = `<i class="${isFav ? 'fas' : 'far'} fa-heart" style="color: ${isFav ? 'var(--danger-color)' : 'var(--text-muted)'}"></i>`;
+            favBtn.onclick = (e) => toggleFavorite(e, currentProduct.id);
+            
+            // Insertamos el corazón justo después del botón de Amazon
+            const amazonBtn = document.getElementById('detailAmazonLink');
+            amazonBtn.style.display = 'inline-block';
+            amazonBtn.style.width = 'calc(100% - 80px)';
+            amazonBtn.parentNode.insertBefore(favBtn, amazonBtn.nextSibling);
+        }
+
 
         // ==================== INITIALIZATION ====================
         document.addEventListener('DOMContentLoaded', () => {
             console.log('🟢 DOMContentLoaded - Iniciando aplicación');
             updateUIForUser(); // <--- AÑADIR ESTA LÍNEA
+            fetchUserFavorites(); // <--- AÑADE ESTA LÍNEA
             loadProducts();
             updateStats();
             setupEventListeners();
@@ -2593,7 +2732,27 @@
             window.scrollTo(0, 0);
             
             logDebug(`📄 Página de detalle abierta: ${producto.id}`);
+            
+
+
+
+            // ... (todo el código anterior de la función)
+            
+            // ✅ CARGAR PRODUCTOS DESTACADOS EN SIDEBAR
+            renderFeaturedProducts();
+            
+            window.scrollTo(0, 0);
+            
+            // 1. Añadimos la llamada aquí para que dibuje el corazón
+            renderDetailFavoriteBtn(); 
+            
+            logDebug(`📄 Página de detalle abierta: ${producto.id}`);
+        } // <--- Esta es la llave que cierra la función            
+
         }
+
+
+
 
         // ==================== HANDLE VOTE ON DETAIL PAGE ====================
         async function handleDetailVote(voteType) {
@@ -3426,7 +3585,6 @@ async function updateStats() {
                 imageDiv.className = 'product-card-image';
                 imageDiv.onclick = (e) => {
                     e.stopPropagation();
-                    console.log('🔵 Click en imagen - Producto ID:', producto.id);
                     showProductDetailPage(producto);
                 };
                 
@@ -3436,12 +3594,23 @@ async function updateStats() {
                 img.onerror = function() { this.src = 'https://via.placeholder.com/300x200?text=Sin+imagen'; };
                 img.loading = 'lazy';
                 
-                // --- LOGO DE AMAZON (Mucho más grande: height 55px, sin fondos rojos ni porcentajes) ---
+                // --- LOGO DE AMAZON ---
                 const logoBadge = document.createElement('div');
                 logoBadge.style.cssText = 'position: absolute; bottom: 5px; left: 5px; z-index: 10; display: flex; align-items: center; justify-content: center;';
                 logoBadge.innerHTML = '<img src="/static/logoamazon.png" style="height: 65px; width: auto; object-fit: contain; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.4));">';
                 
+                // --- NUEVO: BOTÓN DE FAVORITO (Arriba a la derecha) ---
+                const favBtn = document.createElement('div');
+                // Si el ID del producto está en nuestro Set de favoritos, le ponemos la clase 'is-favorite'
+                const isFav = userFavorites.has(producto.id);
+                favBtn.className = `favorite-btn ${isFav ? 'is-favorite' : ''}`;
+                favBtn.innerHTML = `<i class="${isFav ? 'fas' : 'far'} fa-heart"></i>`;
+                favBtn.title = isFav ? "Quitar de favoritos" : "Guardar en favoritos";
+                favBtn.onclick = (e) => toggleFavorite(e, producto.id);
+                
+                // Añadimos todo al contenedor de la imagen
                 imageDiv.appendChild(logoBadge);
+                imageDiv.appendChild(favBtn); // <--- Corazón añadido
                 imageDiv.appendChild(img);
                 card.appendChild(imageDiv);
                 
