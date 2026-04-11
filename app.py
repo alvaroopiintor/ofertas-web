@@ -213,23 +213,31 @@ def get_ofertas():
     where = "WHERE " + " AND ".join(conditions) if conditions else ""
     
     # 3. Lógica de Ordenación en BD
+    # 3. Lógica de Ordenación en BD
     order_by = "ORDER BY fecha_creacion DESC"
     if sort == "votes":
         order_by = "ORDER BY (votos_calientes - votos_frios) DESC"
+    elif sort == "price-asc":
+        order_by = "ORDER BY CAST(NULLIF(regexp_replace(replace(precio, ',', '.'), '[^0-9.]', '', 'g'), '') AS NUMERIC) ASC NULLS LAST"
+    elif sort == "price-desc":
+        order_by = "ORDER BY CAST(NULLIF(regexp_replace(replace(precio, ',', '.'), '[^0-9.]', '', 'g'), '') AS NUMERIC) DESC NULLS LAST"
     elif sort == "discount-desc":
         order_by = """ORDER BY 
-            CASE WHEN precio_antes IS NOT NULL AND precio_antes != 'N/A' AND precio IS NOT NULL 
-            THEN (CAST(NULLIF(regexp_replace(replace(precio_antes, ',', '.'), '[^0-9.]', '', 'g'), '') AS NUMERIC) - 
-                  CAST(NULLIF(regexp_replace(replace(precio, ',', '.'), '[^0-9.]', '', 'g'), '') AS NUMERIC)) 
-                 / CAST(NULLIF(regexp_replace(replace(precio_antes, ',', '.'), '[^0-9.]', '', 'g'), '') AS NUMERIC)
-            ELSE 0 END DESC NULLS LAST"""
+            CASE 
+                WHEN precio_antes IS NOT NULL AND precio_antes != 'N/A' AND precio IS NOT NULL 
+                     AND CAST(NULLIF(regexp_replace(replace(precio_antes, ',', '.'), '[^0-9.]', '', 'g'), '') AS NUMERIC) > 0
+                THEN (CAST(NULLIF(regexp_replace(replace(precio_antes, ',', '.'), '[^0-9.]', '', 'g'), '') AS NUMERIC) - CAST(NULLIF(regexp_replace(replace(precio, ',', '.'), '[^0-9.]', '', 'g'), '') AS NUMERIC)) / CAST(NULLIF(regexp_replace(replace(precio_antes, ',', '.'), '[^0-9.]', '', 'g'), '') AS NUMERIC)
+                ELSE 0 
+            END DESC NULLS LAST"""
     elif sort == "discount-asc":
         order_by = """ORDER BY 
-            CASE WHEN precio_antes IS NOT NULL AND precio_antes != 'N/A' AND precio IS NOT NULL 
-            THEN (CAST(NULLIF(regexp_replace(replace(precio_antes, ',', '.'), '[^0-9.]', '', 'g'), '') AS NUMERIC) - 
-                  CAST(NULLIF(regexp_replace(replace(precio, ',', '.'), '[^0-9.]', '', 'g'), '') AS NUMERIC)) 
-                 / CAST(NULLIF(regexp_replace(replace(precio_antes, ',', '.'), '[^0-9.]', '', 'g'), '') AS NUMERIC)
-            ELSE 0 END ASC NULLS LAST"""
+            CASE 
+                WHEN precio_antes IS NOT NULL AND precio_antes != 'N/A' AND precio IS NOT NULL 
+                     AND CAST(NULLIF(regexp_replace(replace(precio_antes, ',', '.'), '[^0-9.]', '', 'g'), '') AS NUMERIC) > 0
+                THEN (CAST(NULLIF(regexp_replace(replace(precio_antes, ',', '.'), '[^0-9.]', '', 'g'), '') AS NUMERIC) - CAST(NULLIF(regexp_replace(replace(precio, ',', '.'), '[^0-9.]', '', 'g'), '') AS NUMERIC)) / CAST(NULLIF(regexp_replace(replace(precio_antes, ',', '.'), '[^0-9.]', '', 'g'), '') AS NUMERIC)
+                ELSE 0 
+            END ASC NULLS LAST"""
+
     try:
         with get_db_connection() as conn:
             c = conn.cursor()
