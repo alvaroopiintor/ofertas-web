@@ -9,4 +9,4 @@ Werkzeug
 google-auth
 Pillow
 pyTelegramBotAPI
-amazon-paapi
+python-amazon-paapi
