@@ -10,6 +10,10 @@ from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 import datetime
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+import secrets
+import string
 
 # ==================== CONFIGURACIÓN LOGGING ====================
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -36,6 +40,8 @@ CORS(app, resources={r"/*": {
 # ==================== SEGURIDAD API ====================
 API_SECRET_KEY = os.environ.get("API_SECRET_KEY", "clave_desarrollo_local_123")
 JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "super_secreto_para_tokens_jwt_12345") # NUEVO
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "AQUI_TU_CLIENT_ID_DE_GOOGLE.apps.googleusercontent.com")
+
 
 def requiere_api_key(f):
     @wraps(f)
@@ -625,6 +631,64 @@ def login():
     except Exception as e:
         logger.error(f"Error en login: {e}")
         return jsonify({"status": "error", "message": "Error en el servidor"}), 500
+
+
+@app.route("/api/google-login", methods=["POST"])
+def google_login():
+    data = request.json
+    token_google = data.get("credential")
+    
+    if not token_google:
+        return jsonify({"status": "error", "message": "Token no proporcionado"}), 400
+        
+    try:
+        # 1. Validar el token con los servidores de Google
+        idinfo = id_token.verify_oauth2_token(token_google, google_requests.Request(), GOOGLE_CLIENT_ID)
+        
+        email = idinfo['email']
+        nombre = idinfo.get('name', 'Usuario')
+        
+        with get_db_connection() as conn:
+            c = conn.cursor()
+            # 2. Buscar si el usuario ya existe
+            c.execute("SELECT id, nombre FROM usuarios WHERE email = %s AND activo = TRUE", (email,))
+            usuario = c.fetchone()
+            
+            if not usuario:
+                # 3. Si no existe, lo registramos automáticamente.
+                # Generamos una contraseña aleatoria de 32 caracteres que nadie conocerá.
+                alphabet = string.ascii_letters + string.digits
+                random_password = ''.join(secrets.choice(alphabet) for i in range(32))
+                hash_pw = generate_password_hash(random_password)
+                
+                c.execute("""
+                    INSERT INTO usuarios (email, password_hash, nombre)
+                    VALUES (%s, %s, %s)
+                    RETURNING id, nombre
+                """, (email, hash_pw, nombre))
+                usuario = c.fetchone()
+                conn.commit()
+                
+            # 4. Crear nuestro propio Token de sesión (igual que en el login normal)
+            token = jwt.encode({
+                'usuario_id': usuario[0],
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+            }, JWT_SECRET_KEY, algorithm="HS256")
+            
+            return jsonify({
+                "status": "ok",
+                "token": token,
+                "usuario": {
+                    "id": usuario[0],
+                    "nombre": usuario[1]
+                }
+            })
+    except ValueError:
+        return jsonify({"status": "error", "message": "Token de Google inválido"}), 401
+    except Exception as e:
+        logger.error(f"Error en google login: {e}")
+        return jsonify({"status": "error", "message": "Error interno del servidor"}), 500
+
 
 
 @app.route("/api/favoritos", methods=["GET"])
