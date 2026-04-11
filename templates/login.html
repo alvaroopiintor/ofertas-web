@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ meta.title if meta else 'Iniciar Sesión - SPAIN LINKS' }}</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #ff6b00;
+            --primary-hover: #e65c00;
+            --bg-color: #f5f6f7;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --text-muted: #7f8c8d;
+            --border-color: #e0e0e0;
+            --input-bg: #f0f4f8; /* El azul clarito de las cajas de texto */
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        
+        /* Fondo de la pantalla completa un poco más oscuro para que la tarjeta blanca resalte */
+        body { background: #e9ecef; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        
+        .auth-container {
+            background: var(--card-bg);
+            width: 100%; max-width: 950px;
+            display: grid; grid-template-columns: 1fr 1fr; /* Dos columnas iguales */
+            border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            overflow: hidden; min-height: 600px;
+        }
+
+        /* COLUMNA IZQUIERDA (Info) */
+        .auth-info-side {
+            background: #f8f9fa; /* Gris muy claro como en la foto */
+            padding: 60px 50px; display: flex;
+            flex-direction: column; justify-content: center; gap: 40px;
+            border-right: 1px solid var(--border-color);
+        }
+        .info-item { display: flex; gap: 20px; align-items: flex-start; }
+        .info-item i { font-size: 28px; color: var(--primary-color); margin-top: 2px; width: 30px; text-align: center; }
+        .info-item h4 { font-size: 18px; margin-bottom: 8px; color: var(--text-color); font-weight: 800; }
+        .info-item p { color: var(--text-muted); font-size: 14px; line-height: 1.5; }
+
+        /* COLUMNA DERECHA (Formulario) */
+        .auth-form-side { 
+            padding: 60px 50px; display: flex; flex-direction: column; 
+            justify-content: center; position: relative; background: #fff;
+        }
+        
+        /* Botón de cerrar "X" arriba a la derecha */
+        .close-btn {
+            position: absolute; top: 20px; right: 20px;
+            background: var(--input-bg); width: 36px; height: 36px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-muted); text-decoration: none; font-size: 16px; transition: all 0.2s; border: none;
+        }
+        .close-btn:hover { background: #e2e8f0; color: var(--text-color); }
+
+        .auth-header-title { font-size: 26px; font-weight: 800; margin-bottom: 30px; text-align: center; color: var(--text-color); }
+        
+        .google-btn {
+            display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
+            padding: 12px; border: 1px solid var(--border-color); border-radius: 8px;
+            background: #fff; color: var(--text-color); font-weight: 600; font-size: 14px; cursor: pointer; margin-bottom: 25px; transition: background 0.2s;
+        }
+        .google-btn:hover { background: #f8f9fa; }
+        .google-btn img { width: 18px; }
+
+        .divider { display: flex; align-items: center; text-align: center; margin: 20px 0; color: var(--text-muted); font-size: 13px; }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--border-color); }
+        .divider span { padding: 0 15px; }
+
+        .auth-form { display: none; flex-direction: column; gap: 18px; }
+        .auth-form.active { display: flex; }
+        
+        .input-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text-muted); }
+        .input-group input {
+            width: 100%; padding: 14px; border: 2px solid transparent; background: var(--input-bg);
+            border-radius: 8px; font-size: 15px; color: var(--text-color); transition: border-color 0.2s, background 0.2s;
+        }
+        .input-group input:focus { border-color: var(--primary-color); outline: none; background: #fff; }
+        
+        .submit-btn {
+            background: var(--primary-color); color: #fff; border: none; border-radius: 8px;
+            padding: 16px; font-weight: 800; font-size: 16px; cursor: pointer; margin-top: 10px; width: 100%;
+            box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3); transition: transform 0.2s, background 0.2s;
+        }
+        .submit-btn:hover { transform: translateY(-2px); background: var(--primary-hover); }
+        
+        .error-msg { color: #e74c3c; font-size: 13px; text-align: center; display: none; background: #fdf0ed; padding: 10px; border-radius: 8px; }
+        
+        .footer-links { text-align: center; margin-top: 20px; font-size: 14px; color: var(--text-color); }
+        .footer-links a { color: var(--primary-color); text-decoration: none; font-weight: 800; cursor: pointer; }
+        .footer-links a:hover { text-decoration: underline; }
+
+        /* RESPONSIVO MÓVIL */
+        @media (max-width: 768px) {
+            body { padding: 0; background: #fff; }
+            .auth-container { grid-template-columns: 1fr; border-radius: 0; min-height: 100vh; box-shadow: none; }
+            .auth-info-side { display: none; } /* Ocultamos la info en móvil para dar espacio al form */
+            .auth-form-side { padding: 40px 25px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="auth-container">
+    <div class="auth-info-side">
+        <div class="info-item">
+            <i class="fas fa-shipping-fast"></i>
+            <div>
+                <h4>Gestiona tus votos</h4>
+                <p>Ten el control de todas las ofertas que te gustan y recibe calor de la comunidad.</p>
+            </div>
+        </div>
+        <div class="info-item">
+            <i class="fas fa-heart"></i>
+            <div>
+                <h4>Lista de deseos</h4>
+                <p>Guarda tus chollos favoritos para comprarlos después sin perder el descuento.</p>
+            </div>
+        </div>
+        <div class="info-item">
+            <i class="fas fa-bell"></i>
+            <div>
+                <h4>Alertas exclusivas</h4>
+                <p>Sé el primero en enterarte cuando un producto baje de precio drásticamente.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="auth-form-side">
+        <a href="/" class="close-btn" title="Cerrar"><i class="fas fa-times"></i></a>
+        
+        <h2 class="auth-header-title" id="formTitle">Iniciar sesión</h2>
+        
+        <button class="google-btn" onclick="alert('Próximamente')">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="G"> Entrar con Google
+        </button>
+        <div class="divider"><span>O bien</span></div>
+
+        <form id="loginForm" class="auth-form active" onsubmit="handleLogin(event)">
+            <div id="loginError" class="error-msg"></div>
+            <div class="input-group">
+                <label>E-mail*</label>
+                <input type="email" id="loginEmail" placeholder="spainlinks1@gmail.com" required>
+            </div>
+            <div class="input-group">
+                <label>Contraseña*</label>
+                <input type="password" id="loginPassword" placeholder="••••••••••••" required>
+            </div>
+            <button type="submit" class="submit-btn">Iniciar sesión</button>
+            <div class="footer-links">¿Eres nuevo cliente? <a onclick="switchTab('register')">Crear cuenta</a></div>
+        </form>
+
+        <form id="registerForm" class="auth-form" onsubmit="handleRegister(event)">
+            <div id="registerError" class="error-msg"></div>
+            <div class="input-group">
+                <label>Nombre*</label>
+                <input type="text" id="registerName" placeholder="Tu nombre" required>
+            </div>
+            <div class="input-group">
+                <label>E-mail*</label>
+                <input type="email" id="registerEmail" placeholder="tu@email.com" required>
+            </div>
+            <div class="input-group">
+                <label>Contraseña*</label>
+                <input type="password" id="registerPassword" placeholder="Mínimo 6 caracteres" required minlength="6">
+            </div>
+            <button type="submit" class="submit-btn">Crear cuenta</button>
+            <div class="footer-links">¿Ya tienes cuenta? <a onclick="switchTab('login')">Iniciar sesión</a></div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Comprobar si ya está logueado
+    if (localStorage.getItem('token')) {
+        window.location.href = '/'; 
+    }
+
+    function switchTab(tab) {
+        const isLogin = tab === 'login';
+        document.getElementById('formTitle').textContent = isLogin ? 'Iniciar sesión' : 'Crear cuenta';
+        document.getElementById('loginForm').classList.toggle('active', isLogin);
+        document.getElementById('registerForm').classList.toggle('active', !isLogin);
+        document.getElementById('loginError').style.display = 'none';
+        document.getElementById('registerError').style.display = 'none';
+    }
+
+    async function handleLogin(e) {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        const errorEl = document.getElementById('loginError');
+
+        // Cambiar botón a cargando
+        const btn = e.target.querySelector('button[type="submit"]');
+        const oldText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando...';
+        btn.disabled = true;
+
+        try {
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+
+            if (data.status === 'ok') {
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.usuario));
+                window.location.href = '/'; // Éxito, volver a tienda
+            } else {
+                errorEl.textContent = data.message;
+                errorEl.style.display = 'block';
+                btn.innerHTML = oldText;
+                btn.disabled = false;
+            }
+        } catch (err) {
+            errorEl.textContent = "Error al conectar con el servidor";
+            errorEl.style.display = 'block';
+            btn.innerHTML = oldText;
+            btn.disabled = false;
+        }
+    }
+
+    async function handleRegister(e) {
+        e.preventDefault();
+        const nombre = document.getElementById('registerName').value;
+        const email = document.getElementById('registerEmail').value;
+        const password = document.getElementById('registerPassword').value;
+        const errorEl = document.getElementById('registerError');
+
+        // Cambiar botón a cargando
+        const btn = e.target.querySelector('button[type="submit"]');
+        const oldText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
+        btn.disabled = true;
+
+        try {
+            const res = await fetch('/api/registro', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre, email, password })
+            });
+            const data = await res.json();
+
+            if (data.status === 'ok') {
+                alert("¡Cuenta creada con éxito! Inicia sesión para continuar.");
+                switchTab('login');
+                document.getElementById('loginEmail').value = email; 
+                btn.innerHTML = oldText;
+                btn.disabled = false;
+            } else {
+                errorEl.textContent = data.message;
+                errorEl.style.display = 'block';
+                btn.innerHTML = oldText;
+                btn.disabled = false;
+            }
+        } catch (err) {
+            errorEl.textContent = "Error de conexión";
+            errorEl.style.display = 'block';
+            btn.innerHTML = oldText;
+            btn.disabled = false;
+        }
+    }
+</script>
+</body>
+</html>
