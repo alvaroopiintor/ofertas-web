@@ -623,6 +623,55 @@ def login():
         return jsonify({"status": "error", "message": "Error en el servidor"}), 500
 
 
+@app.route("/api/favoritos", methods=["GET"])
+@token_required
+def get_favoritos(current_user_id):
+    """Obtiene la lista de deseos del usuario logueado"""
+    try:
+        with get_db_connection() as conn:
+            c = conn.cursor()
+            c.execute("""
+                SELECT o.id, o.nombre, o.precio, o.precio_antes, o.link, o.imagen, o.categoria 
+                FROM ofertas o
+                JOIN favoritos f ON o.id = f.oferta_id
+                WHERE f.usuario_id = %s AND o.activo = TRUE
+                ORDER BY f.fecha_agregado DESC
+            """, (current_user_id,))
+            rows = c.fetchall()
+            
+        res = [{"id": r[0], "nombre": r[1], "precio": r[2], "precio_antes": r[3], 
+                "link": r[4], "imagen": r[5], "categoria": r[6]} for r in rows]
+        return jsonify({"favoritos": res})
+    except Exception as e:
+        logger.error(f"Error obteniendo favoritos: {e}")
+        return jsonify({"status": "error", "message": "No se pudieron cargar tus favoritos"}), 500
+
+@app.route("/api/ofertas/<int:id>/favorito", methods=["POST"])
+@token_required
+def toggle_favorito(current_user_id, id):
+    """Añade o quita un producto de favoritos"""
+    try:
+        with get_db_connection() as conn:
+            c = conn.cursor()
+            
+            # Comprobar si ya existe en la tabla de favoritos
+            c.execute("SELECT 1 FROM favoritos WHERE usuario_id = %s AND oferta_id = %s", (current_user_id, id))
+            existe = c.fetchone()
+            
+            if existe:
+                c.execute("DELETE FROM favoritos WHERE usuario_id = %s AND oferta_id = %s", (current_user_id, id))
+                accion = "quitado"
+            else:
+                c.execute("INSERT INTO favoritos (usuario_id, oferta_id) VALUES (%s, %s)", (current_user_id, id))
+                accion = "añadido"
+                
+            conn.commit()
+        return jsonify({"status": "ok", "accion": accion})
+    except Exception as e:
+        logger.error(f"Error toggle favorito: {e}")
+        return jsonify({"status": "error", "message": "Error al procesar favorito"}), 500
+
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
