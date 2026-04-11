@@ -2749,8 +2749,6 @@ function renderDetailFavoriteBtn() {
             logDebug(`📄 Página de detalle abierta: ${producto.id}`);
         } // <--- Esta es la llave que cierra la función            
 
-        }
-
 
 
 
@@ -3355,61 +3353,7 @@ function prevRelatedProducts() {
 
 
 // ==================== SUBMIT COMMENT ====================
-        async function submitDetailComment() {
-            // 1. Verificar si hay sesión
-            if (!authToken) {
-                alert("Debes iniciar sesión para dejar un comentario.");
-                openAuthModal();
-                return;
-            }
-
-            const textInput = document.getElementById('detailCommentText');
-            const text = textInput.value.trim();
-
-            if (!text) {
-                alert("Por favor, escribe algo antes de publicar.");
-                return;
-            }
-
-            try {
-                // Bloquear botón para evitar doble envío
-                const btn = document.querySelector('.comment-form button');
-                const oldText = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publicando...';
-                btn.disabled = true;
-
-                const res = await fetch(`${API_BASE.replace('/api/ofertas', '')}/api/ofertas/${currentProduct.id}/comentarios`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${authToken}` // Enviamos la llave maestra
-                    },
-                    body: JSON.stringify({ texto: text })
-                });
-
-                const data = await res.json();
-
-                // Restaurar botón
-                btn.innerHTML = oldText;
-                btn.disabled = false;
-
-                if (data.status === 'ok') {
-                    textInput.value = ''; // Limpiamos el cuadro de texto
-                    renderDetailComments(currentProduct.id, true); // Recargamos la lista de comentarios
-                    logDebug("💬 Comentario verificado publicado");
-                } else {
-                    alert("Error: " + data.message);
-                }
-            } catch (err) {
-                console.error("❌ Error enviando comentario:", err);
-                alert("No se pudo conectar con el servidor.");
-                const btn = document.querySelector('.comment-form button');
-                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Publicar Comentario';
-                btn.disabled = false;
-            }
-        }
-
-
+        
         function getUserName() {
             return localStorage.getItem('userName') || 'Usuario' + Math.floor(Math.random() * 10000);
         }
