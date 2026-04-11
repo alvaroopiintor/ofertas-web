@@ -1775,13 +1775,19 @@
                     <i class="fas fa-chevron-down submenu-icon" id="catSubmenuIcon" style="margin-left: auto; transition: transform 0.3s;"></i>
                 </button>
                 <div class="sidebar-submenu" id="sidebarCategoriesMenu" style="display: none; flex-direction: column; padding-left: 15px; margin-top: 5px; gap: 4px;">
-                    <a href="#" class="sidebar-sub-btn" onclick="setCategory('tecnologia'); toggleSidebar()"><i class="fas fa-laptop" style="width:20px;"></i> Tecnología <span class="category-count" id="count-tecnologia-sidebar">0</span></a>
+                    <a href="#" class="sidebar-sub-btn" onclick="setCategory('electronica'); toggleSidebar()"><i class="fas fa-laptop" style="width:20px;"></i> Electrónica <span class="category-count" id="count-electronica-sidebar">0</span></a>
+                    <a href="#" class="sidebar-sub-btn" onclick="setCategory('videojuegos'); toggleSidebar()"><i class="fas fa-gamepad" style="width:20px;"></i> Videojuegos <span class="category-count" id="count-videojuegos-sidebar">0</span></a>
                     <a href="#" class="sidebar-sub-btn" onclick="setCategory('hogar'); toggleSidebar()"><i class="fas fa-home" style="width:20px;"></i> Hogar <span class="category-count" id="count-hogar-sidebar">0</span></a>
-                    <a href="#" class="sidebar-sub-btn" onclick="setCategory('moda'); toggleSidebar()"><i class="fas fa-tshirt" style="width:20px;"></i> Moda <span class="category-count" id="count-moda-sidebar">0</span></a>
-                    <a href="#" class="sidebar-sub-btn" onclick="setCategory('belleza'); toggleSidebar()"><i class="fas fa-spa" style="width:20px;"></i> Belleza <span class="category-count" id="count-belleza-sidebar">0</span></a>
+                    <a href="#" class="sidebar-sub-btn" onclick="setCategory('ropa_complementos'); toggleSidebar()"><i class="fas fa-tshirt" style="width:20px;"></i> Ropa y comp. <span class="category-count" id="count-ropa_complementos-sidebar">0</span></a>
+                    <a href="#" class="sidebar-sub-btn" onclick="setCategory('salud_belleza'); toggleSidebar()"><i class="fas fa-spa" style="width:20px;"></i> Salud y belleza <span class="category-count" id="count-salud_belleza-sidebar">0</span></a>
+                    <a href="#" class="sidebar-sub-btn" onclick="setCategory('bebes_ninos'); toggleSidebar()"><i class="fas fa-baby" style="width:20px;"></i> Bebés y niños <span class="category-count" id="count-bebes_ninos-sidebar">0</span></a>
+                    <a href="#" class="sidebar-sub-btn" onclick="setCategory('comida_bebida'); toggleSidebar()"><i class="fas fa-utensils" style="width:20px;"></i> Comida y bebida <span class="category-count" id="count-comida_bebida-sidebar">0</span></a>
                     <a href="#" class="sidebar-sub-btn" onclick="setCategory('deportes'); toggleSidebar()"><i class="fas fa-futbol" style="width:20px;"></i> Deportes <span class="category-count" id="count-deportes-sidebar">0</span></a>
-                    <a href="#" class="sidebar-sub-btn" onclick="setCategory('juguetes'); toggleSidebar()"><i class="fas fa-gamepad" style="width:20px;"></i> Juguetes <span class="category-count" id="count-juguetes-sidebar">0</span></a>
+                    <a href="#" class="sidebar-sub-btn" onclick="setCategory('viajes'); toggleSidebar()"><i class="fas fa-plane-departure" style="width:20px;"></i> Viajes <span class="category-count" id="count-viajes-sidebar">0</span></a>
+                    <a href="#" class="sidebar-sub-btn" onclick="setCategory('ocio'); toggleSidebar()"><i class="fas fa-dice" style="width:20px;"></i> Ocio <span class="category-count" id="count-ocio-sidebar">0</span></a>
                     <a href="#" class="sidebar-sub-btn" onclick="setCategory('mascotas'); toggleSidebar()"><i class="fas fa-paw" style="width:20px;"></i> Mascotas <span class="category-count" id="count-mascotas-sidebar">0</span></a>
+                    <a href="#" class="sidebar-sub-btn" onclick="setCategory('gratis'); toggleSidebar()"><i class="fas fa-gift" style="width:20px;"></i> Gratis <span class="category-count" id="count-gratis-sidebar">0</span></a>
+                    <a href="#" class="sidebar-sub-btn" onclick="setCategory('varios'); toggleSidebar()"><i class="fas fa-box-open" style="width:20px;"></i> Varios <span class="category-count" id="count-varios-sidebar">0</span></a>
                 </div>
             </div>
         </nav>
@@ -1873,14 +1879,21 @@
     <div class="container">
         <main id="homeSection">
             <div class="categories" id="categoriesSection">
+                <div class="categories" id="categoriesSection">
                 <button class="category-btn active" data-category="all"><i class="fas fa-th"></i> Todas</button>
-                <button class="category-btn" data-category="tecnologia"><i class="fas fa-laptop"></i> Tecnología</button>
+                <button class="category-btn" data-category="electronica"><i class="fas fa-laptop"></i> Electrónica</button>
+                <button class="category-btn" data-category="videojuegos"><i class="fas fa-gamepad"></i> Videojuegos</button>
                 <button class="category-btn" data-category="hogar"><i class="fas fa-home"></i> Hogar</button>
-                <button class="category-btn" data-category="moda"><i class="fas fa-tshirt"></i> Moda</button>
-                <button class="category-btn" data-category="belleza"><i class="fas fa-spa"></i> Belleza</button>
+                <button class="category-btn" data-category="ropa_complementos"><i class="fas fa-tshirt"></i> Ropa y complementos</button>
+                <button class="category-btn" data-category="salud_belleza"><i class="fas fa-spa"></i> Salud y belleza</button>
+                <button class="category-btn" data-category="bebes_ninos"><i class="fas fa-baby"></i> Bebés y niños</button>
+                <button class="category-btn" data-category="comida_bebida"><i class="fas fa-utensils"></i> Comida y bebida</button>
                 <button class="category-btn" data-category="deportes"><i class="fas fa-futbol"></i> Deportes</button>
-                <button class="category-btn" data-category="juguetes"><i class="fas fa-gamepad"></i> Juguetes</button>
+                <button class="category-btn" data-category="viajes"><i class="fas fa-plane-departure"></i> Viajes</button>
+                <button class="category-btn" data-category="ocio"><i class="fas fa-dice"></i> Ocio</button>
                 <button class="category-btn" data-category="mascotas"><i class="fas fa-paw"></i> Mascotas</button>
+                <button class="category-btn" data-category="gratis"><i class="fas fa-gift"></i> Gratis</button>
+                <button class="category-btn" data-category="varios"><i class="fas fa-box-open"></i> Varios</button>
             </div>
 
             <div class="sort-controls">
@@ -3435,7 +3448,11 @@ async function updateStats() {
             if (elVotos2) elVotos2.textContent = votosStr;
 
             // 5. Categorías
-            const categories = ['tecnologia', 'hogar', 'moda', 'belleza', 'deportes', 'juguetes', 'mascotas'];
+            const categories = [
+                'electronica', 'videojuegos', 'hogar', 'ropa_complementos', 'salud_belleza', 
+                'bebes_ninos', 'comida_bebida', 'deportes', 'viajes', 'ocio', 'mascotas', 
+                'gratis', 'varios'
+            ];
             categories.forEach(cat => {
                 const count = data.categorias[cat] || 0; 
                 const elSidebar = document.getElementById(`count-${cat}-sidebar`);
