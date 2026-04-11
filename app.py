@@ -14,6 +14,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 import secrets
 import string
+from dotenv import load_dotenv # <--- AÑADE ESTO
 
 # ==================== CONFIGURACIÓN LOGGING ====================
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -40,8 +41,7 @@ CORS(app, resources={r"/*": {
 # ==================== SEGURIDAD API ====================
 API_SECRET_KEY = os.environ.get("API_SECRET_KEY", "clave_desarrollo_local_123")
 JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "super_secreto_para_tokens_jwt_12345") # NUEVO
-GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "AQUI_TU_CLIENT_ID_DE_GOOGLE.apps.googleusercontent.com")
-
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
 
 def requiere_api_key(f):
     @wraps(f)
