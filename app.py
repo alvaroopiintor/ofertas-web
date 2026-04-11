@@ -6,6 +6,10 @@ import os
 import logging
 from urllib.parse import urlparse
 from functools import wraps
+# NUEVOS IMPORTS PARA USUARIOS Y SEGURIDAD
+from werkzeug.security import generate_password_hash, check_password_hash
+import jwt
+import datetime
 
 # ==================== CONFIGURACIÓN LOGGING ====================
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -31,6 +35,7 @@ CORS(app, resources={r"/*": {
 
 # ==================== SEGURIDAD API ====================
 API_SECRET_KEY = os.environ.get("API_SECRET_KEY", "clave_desarrollo_local_123")
+JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "super_secreto_para_tokens_jwt_12345") # NUEVO
 
 def requiere_api_key(f):
     @wraps(f)
@@ -40,6 +45,29 @@ def requiere_api_key(f):
             return jsonify({"status": "error", "message": "No autorizado"}), 401
         return f(*args, **kwargs)
     return decorated
+
+
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        
+        if not token:
+            return jsonify({"status": "error", "message": "Falta el token de sesión"}), 401
+        
+        try:
+            # Quitamos la palabra 'Bearer ' si existe
+            if token.startswith('Bearer '):
+                token = token.split(" ")[1]
+                
+            data = jwt.decode(token, JWT_SECRET_KEY, algorithms=["HS256"])
+            current_user_id = data['usuario_id']
+        except Exception as e:
+            return jsonify({"status": "error", "message": "Token inválido o expirado"}), 401
+            
+        return f(current_user_id, *args, **kwargs)
+    return decorated
+
 
 # ==================== BASE DE DATOS (CONNECTION POOL) ====================
 db_pool = None
@@ -106,8 +134,6 @@ def init_db():
                 )
             """)
 
-            
-            
             # Verificar columnas para actualizaciones
             c.execute("SELECT column_name FROM information_schema.columns WHERE table_name='ofertas'")
             cols = [row[0] for row in c.fetchall()]
@@ -128,10 +154,44 @@ def init_db():
                     activo BOOLEAN DEFAULT TRUE
                 )
             """)
+
+            # --- NUEVAS TABLAS PARA EL SISTEMA DE USUARIOS ---
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS usuarios (
+                    id SERIAL PRIMARY KEY,
+                    email TEXT UNIQUE NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    nombre TEXT NOT NULL,
+                    fecha_registro TIMESTAMP DEFAULT NOW(),
+                    activo BOOLEAN DEFAULT TRUE
+                )
+            """)
+
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS favoritos (
+                    usuario_id INT REFERENCES usuarios(id) ON DELETE CASCADE,
+                    oferta_id INT REFERENCES ofertas(id) ON DELETE CASCADE,
+                    fecha_agregado TIMESTAMP DEFAULT NOW(),
+                    PRIMARY KEY (usuario_id, oferta_id)
+                )
+            """)
+            
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS votos_usuarios (
+                    usuario_id INT REFERENCES usuarios(id) ON DELETE CASCADE,
+                    oferta_id INT REFERENCES ofertas(id) ON DELETE CASCADE,
+                    tipo_voto VARCHAR(10) NOT NULL,
+                    fecha_voto TIMESTAMP DEFAULT NOW(),
+                    PRIMARY KEY (usuario_id, oferta_id)
+                )
+            """)
+            # -------------------------------------------------
+
             conn.commit()
         logger.info("✅ DB Lista")
     except Exception as e:
         logger.error(f"❌ Error DB: {e}")
+
 
 # Solo ejecutamos init_db si hay URL configurada
 if os.environ.get("DATABASE_URL"):
@@ -332,18 +392,65 @@ def update_activo(id):
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route("/api/ofertas/<int:id>/voto", methods=["POST"])
-def votar(id):
-    tipo = request.json.get("tipo")
-    col = "votos_calientes" if tipo == "caliente" else "votos_frios"
+@token_required  # <--- NUESTRO GUARDIÁN DE SEGURIDAD
+def votar(current_user_id, id):
+    tipo = request.json.get("tipo") # 'caliente' o 'frio'
+    
+    if tipo not in ['caliente', 'frio']:
+        return jsonify({"status": "error", "message": "Tipo de voto inválido"}), 400
+
     try:
         with get_db_connection() as conn:
             c = conn.cursor()
-            c.execute(f"UPDATE ofertas SET {col} = {col} + 1 WHERE id=%s", (id,))
+            
+            # 1. Comprobar si el usuario ya ha votado esta oferta
+            c.execute("SELECT tipo_voto FROM votos_usuarios WHERE usuario_id = %s AND oferta_id = %s", (current_user_id, id))
+            voto_existente = c.fetchone()
+            
+            # VARIABLE PARA SABER SI EL VOTO FUE AÑADIDO, CAMBIADO O QUITADO
+            accion = None 
+
+            if voto_existente:
+                tipo_anterior = voto_existente[0]
+                
+                if tipo_anterior == tipo:
+                    # Si pulsa el MISMO botón -> Quitar el voto
+                    c.execute("DELETE FROM votos_usuarios WHERE usuario_id = %s AND oferta_id = %s", (current_user_id, id))
+                    col_restar = "votos_calientes" if tipo == "caliente" else "votos_frios"
+                    c.execute(f"UPDATE ofertas SET {col_restar} = GREATEST(0, {col_restar} - 1) WHERE id = %s", (id,))
+                    accion = "quitado"
+                else:
+                    # Si pulsa el botón CONTRARIO -> Cambiar el voto
+                    c.execute("UPDATE votos_usuarios SET tipo_voto = %s WHERE usuario_id = %s AND oferta_id = %s", (tipo, current_user_id, id))
+                    
+                    if tipo == "caliente":
+                        c.execute("UPDATE ofertas SET votos_calientes = votos_calientes + 1, votos_frios = GREATEST(0, votos_frios - 1) WHERE id = %s", (id,))
+                    else:
+                        c.execute("UPDATE ofertas SET votos_frios = votos_frios + 1, votos_calientes = GREATEST(0, votos_calientes - 1) WHERE id = %s", (id,))
+                    accion = "cambiado"
+            else:
+                # Si NUNCA ha votado -> Añadir el voto
+                c.execute("INSERT INTO votos_usuarios (usuario_id, oferta_id, tipo_voto) VALUES (%s, %s, %s)", (current_user_id, id, tipo))
+                col_sumar = "votos_calientes" if tipo == "caliente" else "votos_frios"
+                c.execute(f"UPDATE ofertas SET {col_sumar} = {col_sumar} + 1 WHERE id = %s", (id,))
+                accion = "añadido"
+
             conn.commit()
+            
+            # Devolver los nuevos totales
             c.execute("SELECT votos_calientes, votos_frios FROM ofertas WHERE id=%s", (id,))
             r = c.fetchone()
-        return jsonify({"calientes": r[0], "frios": r[1]})
+            
+        return jsonify({
+            "status": "ok", 
+            "accion": accion,
+            "calientes": r[0], 
+            "frios": r[1],
+            "voto_actual": tipo if accion != "quitado" else None
+        })
+        
     except Exception as e:
+        logger.error(f"Error en voto: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
@@ -387,16 +494,135 @@ def get_comentarios(id):
 
 
 @app.route("/api/ofertas/<int:id>/comentarios", methods=["POST"])
-def add_comentario(id):
+@token_required # <--- Solo usuarios con "llave"
+def add_comentario(current_user_id, id):
     data = request.json
+    texto = data.get("texto", "").strip()
+    
+    if not texto:
+        return jsonify({"status": "error", "message": "El comentario no puede estar vacío"}), 400
+
     try:
         with get_db_connection() as conn:
             c = conn.cursor()
-            c.execute("INSERT INTO comentarios (oferta_id, usuario, texto) VALUES (%s, %s, %s)", (id, data.get("usuario", "Anónimo"), data.get("texto")))
+            
+            # 1. Buscamos el nombre REAL del usuario en la tabla 'usuarios'
+            c.execute("SELECT nombre FROM usuarios WHERE id = %s", (current_user_id,))
+            resultado = c.fetchone()
+            
+            if not resultado:
+                return jsonify({"status": "error", "message": "Usuario no encontrado"}), 404
+                
+            nombre_real = resultado[0]
+            
+            # 2. Insertamos el comentario con el nombre verificado
+            c.execute("""
+                INSERT INTO comentarios (oferta_id, usuario, texto) 
+                VALUES (%s, %s, %s)
+            """, (id, nombre_real, texto))
+            
             conn.commit()
-        return jsonify({"status": "ok"})
+            
+        return jsonify({"status": "ok", "usuario": nombre_real})
+        
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        logger.error(f"Error añadiendo comentario: {e}")
+        return jsonify({"status": "error", "message": "Error al publicar el comentario"}), 500
+
+
+# ==================== SISTEMA DE USUARIOS ====================
+
+@app.route("/api/registro", methods=["POST"])
+def registrar_usuario():
+    data = request.json
+    email = data.get("email", "").strip().lower()
+    password = data.get("password", "")
+    nombre = data.get("nombre", "").strip()
+
+    if not email or not password or not nombre:
+        return jsonify({"status": "error", "message": "Faltan campos obligatorios"}), 400
+
+    if len(password) < 6:
+        return jsonify({"status": "error", "message": "La contraseña debe tener al menos 6 caracteres"}), 400
+
+    try:
+        with get_db_connection() as conn:
+            c = conn.cursor()
+            
+            # 1. Comprobar si el email ya existe
+            c.execute("SELECT id FROM usuarios WHERE email = %s", (email,))
+            if c.fetchone():
+                return jsonify({"status": "error", "message": "Este email ya está registrado"}), 409
+            
+            # 2. Crear el Hash de la contraseña (Seguridad)
+            hash_pw = generate_password_hash(password)
+            
+            # 3. Guardar el nuevo usuario en la base de datos
+            c.execute("""
+                INSERT INTO usuarios (email, password_hash, nombre)
+                VALUES (%s, %s, %s)
+                RETURNING id, nombre, email
+            """, (email, hash_pw, nombre))
+            
+            nuevo_usuario = c.fetchone()
+            conn.commit()
+            
+            return jsonify({
+                "status": "ok", 
+                "message": "Usuario registrado correctamente",
+                "usuario": {
+                    "id": nuevo_usuario[0],
+                    "nombre": nuevo_usuario[1],
+                    "email": nuevo_usuario[2]
+                }
+            })
+            
+    except Exception as e:
+        logger.error(f"Error en registro: {e}")
+        return jsonify({"status": "error", "message": "Error interno del servidor"}), 500
+
+
+
+@app.route("/api/login", methods=["POST"])
+def login():
+    data = request.json
+    email = data.get("email", "").strip().lower()
+    password = data.get("password", "")
+
+    if not email or not password:
+        return jsonify({"status": "error", "message": "Email y contraseña requeridos"}), 400
+
+    try:
+        with get_db_connection() as conn:
+            c = conn.cursor()
+            # 1. Buscar al usuario por email
+            c.execute("SELECT id, nombre, password_hash FROM usuarios WHERE email = %s AND activo = TRUE", (email,))
+            usuario = c.fetchone()
+            
+            # 2. Verificar si existe y si la contraseña coincide
+            if usuario and check_password_hash(usuario[2], password):
+                # 3. Crear el Token JWT (Válido por 24 horas)
+                token = jwt.encode({
+                    'usuario_id': usuario[0],
+                    'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+                }, JWT_SECRET_KEY, algorithm="HS256")
+                
+                return jsonify({
+                    "status": "ok",
+                    "token": token,
+                    "usuario": {
+                        "id": usuario[0],
+                        "nombre": usuario[1]
+                    }
+                })
+            else:
+                return jsonify({"status": "error", "message": "Credenciales inválidas"}), 401
+                
+    except Exception as e:
+        logger.error(f"Error en login: {e}")
+        return jsonify({"status": "error", "message": "Error en el servidor"}), 500
+
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
