@@ -2231,7 +2231,8 @@
                 window.history.pushState({ id: producto.id }, "", `/producto/${producto.id}`);
             }
             
-            const descuento = calculateDiscount(producto.precio, producto.precioAntes);
+            const precioAntiguo = producto.precioAntes || producto.precio_antes;
+            const descuento = calculateDiscount(producto.precio, precioAntiguo);
             const userVote = getUserVote(producto.id);
             const votosNetos = (producto.votosHot || 0) - (producto.votosCold || 0);
             
@@ -2274,8 +2275,8 @@
             const detailDiscount = document.getElementById('detailDiscount');
 
             if (detailOldPrice) {
-                if (producto.precio_antes && producto.precio_antes !== "N/A") {
-                    detailOldPrice.textContent = producto.precio_antes;
+                if (precioAntiguo && precioAntiguo !== "N/A") {
+                    detailOldPrice.textContent = precioAntiguo;
                     detailOldPrice.style.display = 'inline';
                 } else {
                     detailOldPrice.style.display = 'none';
