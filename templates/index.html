@@ -2423,28 +2423,25 @@
             if (!list && !listDetail) return;
             
             try {
-                // Pedimos un poco más de margen (limit=10) para poder filtrar el actual y que sobren 3
                 const response = await fetch(`${API_BASE}?sort=discount-desc&limit=10&activos=true`);
                 if (!response.ok) throw new Error('Error al cargar destacados');
                 const data = await response.json();
                 
                 let featured = data.ofertas;
                 
-                // Filtramos para que NO aparezca el producto que el usuario está viendo ahora mismo
                 if (currentProduct) {
                     featured = featured.filter(p => p.id !== currentProduct.id);
                 }
                 
-                // Siempre tomamos exactamente 3 de los que quedan
                 featured = featured.slice(0, 3);
 
-                if (featured.length < 3) {
-                    // Si por algún motivo hay pocos productos, no mostramos nada o mostramos lo que haya
-                    if (featured.length === 0) return;
-                }
+                if (featured.length === 0) return;
 
                 const html = featured.map((p, index) => {
-                    const descuento = calculateDiscount(p.precio, p.precio_antes); 
+                    // Detectamos el precio antiguo (formato API o formato local)
+                    const precioAntiguo = p.precio_antes || p.precioAntes;
+                    const descuento = calculateDiscount(p.precio, precioAntiguo); 
+                    
                     return `
                         <li class="featured-product-item" onclick="showProductDetailPage(${JSON.stringify(p).replace(/"/g, '&quot;')})">
                             <div style="position: relative;">
@@ -2453,7 +2450,13 @@
                             </div>
                             <div class="featured-product-info">
                                 <div class="featured-product-title">${sanitizeHTML(p.nombre || 'Producto')}</div>
-                                <div class="featured-product-price">${p.precio || 'N/A'}</div>
+                                
+                                <div style="display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; margin-bottom: 4px;">
+                                    <div class="featured-product-price" style="font-size: 15px;">${p.precio || 'N/A'}</div>
+                                    ${precioAntiguo && precioAntiguo !== "N/A" ? 
+                                        `<span style="text-decoration: line-through; color: var(--text-muted); font-size: 11px;">${precioAntiguo}</span>` : ''}
+                                </div>
+                                
                                 ${descuento > 0 ? `<span class="featured-product-discount">-${descuento}%</span>` : ''}
                             </div>
                         </li>
@@ -2643,7 +2646,7 @@ async function renderDetailRelated(producto) {
 function updateRelatedGrid() {
     const relatedGrid = document.getElementById('detailRelatedGrid');
     const nextBtn = document.getElementById('nextRelatedBtn');
-    const prevBtn = document.getElementById('prevRelatedBtn'); // NUEVO
+    const prevBtn = document.getElementById('prevRelatedBtn'); 
     
     if (!relatedGrid) return;
     
@@ -2654,16 +2657,17 @@ function updateRelatedGrid() {
         return;
     }
     
-    // Reiniciar animación del carrusel
     relatedGrid.classList.remove('carousel-animate');
     void relatedGrid.offsetWidth;
     relatedGrid.classList.add('carousel-animate');
     
-    // Cortamos los 3 productos que tocan ver
     const visibleProducts = relatedProductsList.slice(relatedProductsIndex, relatedProductsIndex + RELATED_PER_PAGE);
     
     relatedGrid.innerHTML = visibleProducts.map(p => {
-        const descuento = calculateDiscount(p.precio, p.precioAntes);
+        // Buscamos el precio antiguo en ambos formatos posibles
+        const precioAntiguo = p.precio_antes || p.precioAntes;
+        const descuento = calculateDiscount(p.precio, precioAntiguo);
+        
         return `
             <div class="product-card" onclick="showProductDetailPage(${JSON.stringify(p).replace(/"/g, '&quot;')})">
                 <div class="product-card-image">
@@ -2677,7 +2681,7 @@ function updateRelatedGrid() {
                     <h3>${sanitizeHTML(p.nombre || 'Producto')}</h3>
                     <div class="price-container">
                         <span class="price">${p.precio || ''}</span>
-                        ${p.precioAntes && p.precioAntes !== "N/A" ? `<span class="old-price">${p.precioAntes}</span>` : ''}
+                        ${precioAntiguo && precioAntiguo !== "N/A" ? `<span class="old-price">${precioAntiguo}</span>` : ''}
                         ${descuento > 0 ? `<span class="inline-discount">-${descuento}%</span>` : ''}
                     </div>
                     <a href="${sanitizeURL(p.link) || '#'}" target="_blank" class="amazon-btn" onclick="event.stopPropagation()">Ver Oferta en Amazon →</a>
@@ -2686,26 +2690,13 @@ function updateRelatedGrid() {
         `;
     }).join('');
 
-    // LÓGICA DE BOTONES INTELIGENTES
-    // Botón Siguiente: Solo se muestra si quedan productos a la derecha
     if (nextBtn) {
-        if (relatedProductsIndex + RELATED_PER_PAGE < relatedProductsList.length) {
-            nextBtn.style.display = 'flex';
-        } else {
-            nextBtn.style.display = 'none'; // Se oculta al llegar al final
-        }
+        nextBtn.style.display = (relatedProductsIndex + RELATED_PER_PAGE < relatedProductsList.length) ? 'flex' : 'none';
     }
-
-    // Botón Anterior: Solo se muestra si no estamos en el inicio (índice > 0)
     if (prevBtn) {
-        if (relatedProductsIndex > 0) {
-            prevBtn.style.display = 'flex';
-        } else {
-            prevBtn.style.display = 'none'; // Se oculta al principio
-        }
+        prevBtn.style.display = (relatedProductsIndex > 0) ? 'flex' : 'none';
     }
 }
-
 function nextRelatedProducts() {
     if (relatedProductsIndex + RELATED_PER_PAGE < relatedProductsList.length) {
         relatedProductsIndex += RELATED_PER_PAGE;
