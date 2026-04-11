@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+¡<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -103,6 +103,9 @@
             .auth-form-side { padding: 40px 25px; }
         }
     </style>
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
 </head>
 <body>
 
@@ -136,9 +139,23 @@
         
         <h2 class="auth-header-title" id="formTitle">Iniciar sesión</h2>
         
-        <button class="google-btn" onclick="alert('Próximamente')">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="G"> Entrar con Google
-        </button>
+        <div id="g_id_onload"
+             data-client_id="870780776663-bmoe0jth3onq4bs9mpdopkjja26lhh70.apps.googleusercontent.com"
+             data-context="signin"
+             data-ux_mode="popup"
+             data-callback="handleGoogleCallback"
+             data-auto_prompt="false">
+        </div>
+
+        <div class="g_id_signin"
+             data-type="standard"
+             data-shape="rectangular"
+             data-theme="outline"
+             data-text="signin_with"
+             data-size="large"
+             data-logo_alignment="left"
+             style="width: 100%; display: flex; justify-content: center; margin-bottom: 25px;">
+        </div>
         <div class="divider"><span>O bien</span></div>
 
         <form id="loginForm" class="auth-form active" onsubmit="handleLogin(event)">
@@ -189,6 +206,36 @@
         document.getElementById('loginError').style.display = 'none';
         document.getElementById('registerError').style.display = 'none';
     }
+
+    
+    // --- LÓGICA DE GOOGLE LOGIN ---
+    async function handleGoogleCallback(response) {
+        // response.credential es el token firmado que nos devuelve Google
+        const errorEl = document.getElementById('loginError');
+        
+        try {
+            const res = await fetch('/api/google-login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ credential: response.credential })
+            });
+            
+            const data = await res.json();
+            
+            if (data.status === 'ok') {
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.usuario));
+                window.location.href = '/'; // Redirigimos a la home
+            } else {
+                errorEl.textContent = data.message;
+                errorEl.style.display = 'block';
+            }
+        } catch (err) {
+            errorEl.textContent = "Error al conectar con el servidor";
+            errorEl.style.display = 'block';
+        }
+    }
+
 
     async function handleLogin(e) {
         e.preventDefault();
