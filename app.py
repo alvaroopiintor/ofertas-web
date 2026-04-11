@@ -202,6 +202,10 @@ if os.environ.get("DATABASE_URL"):
 def home():
     return render_template("index.html", meta=None)
 
+@app.route("/login")
+def pagina_login():
+    return render_template("login.html", meta={"title": "Iniciar Sesión - SPAIN LINKS"})
+
 @app.route("/ping")
 def ping():
     """Ruta ligera para mantener el servidor despierto desde Google Apps Script"""
