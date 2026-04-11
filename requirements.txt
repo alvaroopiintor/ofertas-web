@@ -7,3 +7,4 @@ requests
 PyJWT
 Werkzeug
 google-auth
+Pillow
