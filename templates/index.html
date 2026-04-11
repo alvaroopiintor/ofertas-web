@@ -1606,6 +1606,89 @@
             margin-top: 30px;
             border-top: 1px solid var(--border-color);
         }
+
+
+/* ==================== AUTH MODAL ==================== */
+        .auth-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        .auth-modal-overlay.active { opacity: 1; visibility: visible; }
+        
+        .auth-modal {
+            background: var(--card-bg);
+            border-radius: 15px;
+            width: 100%; max-width: 400px;
+            padding: 30px;
+            box-shadow: var(--shadow-hover);
+            transform: translateY(20px);
+            transition: all 0.3s;
+            position: relative;
+        }
+        .auth-modal-overlay.active .auth-modal { transform: translateY(0); }
+        
+        .auth-close-btn {
+            position: absolute; top: 15px; right: 15px;
+            background: transparent; border: none;
+            font-size: 20px; color: var(--text-muted);
+            cursor: pointer; transition: color 0.2s;
+        }
+        .auth-close-btn:hover { color: var(--danger-color); }
+        
+        .auth-tabs { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 20px; }
+        .auth-tab {
+            flex: 1; padding: 10px; text-align: center;
+            font-weight: bold; color: var(--text-muted);
+            cursor: pointer; border-bottom: 2px solid transparent;
+            margin-bottom: -2px; transition: all 0.2s;
+        }
+        .auth-tab.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
+        
+        .auth-form { display: none; flex-direction: column; gap: 15px; }
+        .auth-form.active { display: flex; }
+        
+        .auth-input-group input {
+            width: 100%; padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px; background: var(--bg-color);
+            color: var(--text-color); font-size: 14px;
+            outline: none; transition: border-color 0.2s;
+        }
+        .auth-input-group input:focus { border-color: var(--primary-color); }
+        
+        .auth-submit-btn {
+            background: var(--primary-color); color: #fff;
+            border: none; border-radius: 8px;
+            padding: 12px; font-weight: bold; font-size: 16px;
+            cursor: pointer; transition: background 0.2s;
+        }
+        .auth-submit-btn:hover { background: var(--primary-hover); }
+        
+        .auth-error {
+            color: var(--danger-color); font-size: 13px; text-align: center; display: none;
+        }
+        
+        /* Botón de usuario en el header */
+        .user-menu-btn {
+            background: var(--primary-color); color: #fff;
+            border: none; border-radius: 8px; padding: 8px 15px;
+            font-weight: bold; cursor: pointer; display: flex;
+            align-items: center; gap: 8px; transition: background 0.2s;
+        }
+        .user-menu-btn:hover { background: var(--primary-hover); }
+        .user-menu-btn.logged-in { background: var(--bg-color); color: var(--text-color); border: 1px solid var(--border-color); }
+        .user-menu-btn.logged-in:hover { border-color: var(--primary-color); }
+
+
+
         
         /* ==================== RESPONSIVE ==================== */
         @media (max-width: 1024px) {
@@ -1820,6 +1903,10 @@
             </div>
             
             <div class="header-actions">
+                <button class="user-menu-btn" id="userMenuBtn" onclick="openAuthModal()">
+                    <i class="fas fa-user"></i> <span id="userMenuText">Entrar</span>
+                </button>
+                
                 <button class="header-btn" onclick="refreshData()" title="Actualizar">
                     <i class="fas fa-sync-alt"></i>
                 </button>
@@ -2097,6 +2184,41 @@
     </footer>
 
     <div class="debug-console" id="debugConsole"></div>
+    <div class="auth-modal-overlay" id="authModal">
+        <div class="auth-modal">
+            <button class="auth-close-btn" onclick="closeAuthModal()"><i class="fas fa-times"></i></button>
+            
+            <div class="auth-tabs">
+                <div class="auth-tab active" onclick="switchAuthTab('login')" id="tabLogin">Iniciar Sesión</div>
+                <div class="auth-tab" onclick="switchAuthTab('register')" id="tabRegister">Registrarse</div>
+            </div>
+
+            <form class="auth-form active" id="loginForm" onsubmit="handleLogin(event)">
+                <div class="auth-error" id="loginError"></div>
+                <div class="auth-input-group">
+                    <input type="email" id="loginEmail" placeholder="Tu Email" required>
+                </div>
+                <div class="auth-input-group">
+                    <input type="password" id="loginPassword" placeholder="Tu Contraseña" required>
+                </div>
+                <button type="submit" class="auth-submit-btn"><i class="fas fa-sign-in-alt"></i> Entrar</button>
+            </form>
+
+            <form class="auth-form" id="registerForm" onsubmit="handleRegister(event)">
+                <div class="auth-error" id="registerError"></div>
+                <div class="auth-input-group">
+                    <input type="text" id="registerName" placeholder="Tu Nombre" required>
+                </div>
+                <div class="auth-input-group">
+                    <input type="email" id="registerEmail" placeholder="Tu Email" required>
+                </div>
+                <div class="auth-input-group">
+                    <input type="password" id="registerPassword" placeholder="Crea una Contraseña (min 6)" required minlength="6">
+                </div>
+                <button type="submit" class="auth-submit-btn"><i class="fas fa-user-plus"></i> Crear Cuenta</button>
+            </form>
+        </div>
+    </div>
 
     <script>
         // ==================== GLOBAL VARIABLES ====================
@@ -2117,9 +2239,132 @@
         let relatedProductsIndex = 0;
         const RELATED_PER_PAGE = 3;
 
+
+
+// --- NUEVAS VARIABLES PARA USUARIOS ---
+        let currentUser = JSON.parse(localStorage.getItem('user')) || null;
+        let authToken = localStorage.getItem('token') || null;
+
+        // --- FUNCIONES DE INTERFAZ (MODAL) ---
+        function openAuthModal() {
+            // Si ya estamos logueados, el botón servirá para ver el perfil o cerrar sesión
+            if (currentUser) {
+                if (confirm(`Hola ${currentUser.nombre}, ¿quieres cerrar sesión?`)) {
+                    handleLogout();
+                }
+                return;
+            }
+            document.getElementById('authModal').classList.add('active');
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.remove('active');
+            document.getElementById('loginError').style.display = 'none';
+            document.getElementById('registerError').style.display = 'none';
+        }
+
+        function switchAuthTab(tab) {
+            const isLogin = tab === 'login';
+            document.getElementById('tabLogin').classList.toggle('active', isLogin);
+            document.getElementById('tabRegister').classList.toggle('active', !isLogin);
+            document.getElementById('loginForm').classList.toggle('active', isLogin);
+            document.getElementById('registerForm').classList.toggle('active', !isLogin);
+        }
+
+        // --- LÓGICA DE REGISTRO ---
+        async function handleRegister(e) {
+            e.preventDefault();
+            const nombre = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const errorEl = document.getElementById('registerError');
+
+            try {
+                const res = await fetch('/api/registro', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, email, password })
+                });
+                const data = await res.json();
+
+                if (data.status === 'ok') {
+                    alert("¡Cuenta creada! Ahora puedes iniciar sesión.");
+                    switchAuthTab('login');
+                } else {
+                    errorEl.textContent = data.message;
+                    errorEl.style.display = 'block';
+                }
+            } catch (err) {
+                errorEl.textContent = "Error de conexión con el servidor";
+                errorEl.style.display = 'block';
+            }
+        }
+
+        // --- LÓGICA DE LOGIN ---
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorEl = document.getElementById('loginError');
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+
+                if (data.status === 'ok') {
+                    // Guardamos la sesión
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.usuario));
+                    authToken = data.token;
+                    currentUser = data.usuario;
+                    
+                    updateUIForUser();
+                    closeAuthModal();
+                    logDebug(`✅ Sesión iniciada: ${currentUser.nombre}`);
+                } else {
+                    errorEl.textContent = data.message;
+                    errorEl.style.display = 'block';
+                }
+            } catch (err) {
+                errorEl.textContent = "Error al conectar con el servidor";
+                errorEl.style.display = 'block';
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            authToken = null;
+            currentUser = null;
+            updateUIForUser();
+            logDebug("🚪 Sesión cerrada");
+            window.location.reload(); // Recargamos para limpiar estados
+        }
+
+        // Función para cambiar el texto del botón del header
+        function updateUIForUser() {
+            const btnText = document.getElementById('userMenuText');
+            const btn = document.getElementById('userMenuBtn');
+            
+            if (currentUser) {
+                btnText.textContent = `Hola, ${currentUser.nombre.split(' ')[0]}`;
+                btn.classList.add('logged-in');
+            } else {
+                btnText.textContent = "Entrar";
+                btn.classList.remove('logged-in');
+            }
+        }
+
+
+
         // ==================== INITIALIZATION ====================
         document.addEventListener('DOMContentLoaded', () => {
             console.log('🟢 DOMContentLoaded - Iniciando aplicación');
+            updateUIForUser(); // <--- AÑADIR ESTA LÍNEA
             loadProducts();
             updateStats();
             setupEventListeners();
@@ -2843,41 +3088,66 @@ function prevRelatedProducts() {
         }
 
         async function setUserVote(productId, voteType) {
-            // 1. Guardar visualmente en localStorage (para UI inmediata)
-            const votes = JSON.parse(localStorage.getItem('userVotes') || '{}');
-            if (votes[productId] === voteType) {
-                delete votes[productId];
-            } else {
-                votes[productId] = voteType;
+            // 1. COMPROBAR SI ESTÁ LOGUEADO
+            if (!authToken) {
+                alert("Debes iniciar sesión para votar en las ofertas.");
+                openAuthModal();
+                return null;
             }
-            localStorage.setItem('userVotes', JSON.stringify(votes));
-    
-            // 2. Enviar voto al servidor (esto actualiza los contadores reales en la DB)
+
             try {
+                // 2. ENVIAR EL VOTO CON EL TOKEN DE SEGURIDAD
                 const res = await fetch(`${API_BASE.replace('/api/ofertas', '')}/api/ofertas/${productId}/voto`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${authToken}` // <-- ¡LA LLAVE MAESTRA!
+                    },
                     body: JSON.stringify({ tipo: voteType === 'hot' ? 'caliente' : 'frio' })
                 });
+                
                 const data = await res.json();
+                
+                if (res.status === 401) {
+                    // Si el token ha caducado
+                    handleLogout();
+                    alert("Tu sesión ha caducado. Por favor, inicia sesión de nuevo.");
+                    openAuthModal();
+                    return null;
+                }
+
                 if (data.status === "ok") {
-                    // Actualizar contadores en la UI si estamos en la página de detalle
+                    // Actualizar localStorage visual (para que los botones sigan marcados al recargar)
+                    const votes = JSON.parse(localStorage.getItem('userVotes') || '{}');
+                    if (data.voto_actual) {
+                        votes[productId] = data.voto_actual === 'caliente' ? 'hot' : 'cold';
+                    } else {
+                        delete votes[productId];
+                    }
+                    localStorage.setItem('userVotes', JSON.stringify(votes));
+
+                    // Actualizar UI si estamos en la página de detalle
                     if (currentProduct && currentProduct.id == productId) {
                         document.getElementById('detailVoteHotCount').textContent = data.calientes || 0;
                         document.getElementById('detailVoteColdCount').textContent = data.frios || 0;
-                         const netos = (data.calientes || 0) - (data.frios || 0);
-                         const totalEl = document.getElementById('detailVoteTotal');
-                         if (totalEl) {
-                             totalEl.textContent = `${netos >= 0 ? '+' : ''}${netos}°`;
-                             totalEl.className = `product-detail-vote-total ${netos >= 0 ? 'positive' : 'negative'}`;
-                         }
+                        
+                        const netos = (data.calientes || 0) - (data.frios || 0);
+                        const totalEl = document.getElementById('detailVoteTotal');
+                        if (totalEl) {
+                            totalEl.textContent = `${netos >= 0 ? '+' : ''}${netos}°`;
+                            totalEl.className = `product-detail-vote-total ${netos >= 0 ? 'positive' : 'negative'}`;
+                        }
                     }
+                    
+                    return votes[productId];
+                } else {
+                    console.error("Error del servidor:", data.message);
+                    return null;
                 }
             } catch (e) {
                 console.error("❌ Error enviando voto:", e);
+                return null;
             }
-    
-            return votes[productId];
         }
 
         async function getProductComments(productId, page = 1) {
@@ -2923,6 +3193,63 @@ function prevRelatedProducts() {
                 return false;
             }
         }
+
+
+// ==================== SUBMIT COMMENT ====================
+        async function submitDetailComment() {
+            // 1. Verificar si hay sesión
+            if (!authToken) {
+                alert("Debes iniciar sesión para dejar un comentario.");
+                openAuthModal();
+                return;
+            }
+
+            const textInput = document.getElementById('detailCommentText');
+            const text = textInput.value.trim();
+
+            if (!text) {
+                alert("Por favor, escribe algo antes de publicar.");
+                return;
+            }
+
+            try {
+                // Bloquear botón para evitar doble envío
+                const btn = document.querySelector('.comment-form button');
+                const oldText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publicando...';
+                btn.disabled = true;
+
+                const res = await fetch(`${API_BASE.replace('/api/ofertas', '')}/api/ofertas/${currentProduct.id}/comentarios`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}` // Enviamos la llave maestra
+                    },
+                    body: JSON.stringify({ texto: text })
+                });
+
+                const data = await res.json();
+
+                // Restaurar botón
+                btn.innerHTML = oldText;
+                btn.disabled = false;
+
+                if (data.status === 'ok') {
+                    textInput.value = ''; // Limpiamos el cuadro de texto
+                    renderDetailComments(currentProduct.id, true); // Recargamos la lista de comentarios
+                    logDebug("💬 Comentario verificado publicado");
+                } else {
+                    alert("Error: " + data.message);
+                }
+            } catch (err) {
+                console.error("❌ Error enviando comentario:", err);
+                alert("No se pudo conectar con el servidor.");
+                const btn = document.querySelector('.comment-form button');
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Publicar Comentario';
+                btn.disabled = false;
+            }
+        }
+
 
         function getUserName() {
             return localStorage.getItem('userName') || 'Usuario' + Math.floor(Math.random() * 10000);
@@ -3020,8 +3347,7 @@ function loadMoreProducts() {
 }
 
 
-        // ==================== UPDATE STATS ====================
-// ==================== UPDATE STATS ====================
+
 // ==================== UPDATE STATS ====================
 async function updateStats() {
     try {
