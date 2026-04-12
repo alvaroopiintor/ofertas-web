@@ -1632,108 +1632,101 @@
 
 
         
-        /* ==================== RESPONSIVE: ENCUADRE Y PROPORCIONES ==================== */
+        /* ==================== RESPONSIVE DEFINITIVO (ENCUADRE TOTAL) ==================== */
         @media (max-width: 1024px) {
+            /* Corregimos la Sidebar: Debe ser block para que se vea al activarse */
             .sidebar { 
                 display: block !important; 
                 transform: translateX(-100%); 
                 transition: transform 0.3s ease;
+                visibility: visible;
             }
             .sidebar.active { transform: translateX(0); }
             .main-layout { grid-template-columns: 1fr; }
         }
         
         @media (max-width: 768px) {
-            /* 1. CABECERA: Evitamos que se salga el contenido */
-            header { width: 100%; overflow: hidden; }
+            /* 1. CABECERA: Encaje total */
             .header-main {
-                padding: 10px;
+                padding: 8px;
                 gap: 5px;
-                display: flex;
-                align-items: center;
+                flex-wrap: nowrap; /* Evita que los elementos se amontonen */
                 justify-content: space-between;
-                flex-wrap: wrap; /* Permite que el buscador baje si no cabe */
+                height: 60px;
             }
-            .header-left { flex-shrink: 1; }
-            .header-logo img { height: 26px; }
-            .header-logo-text { font-size: 0.9rem; }
-
-            /* Reducción de la barra de búsqueda al 50% como pediste */
+            .header-left { gap: 5px; flex-shrink: 1; min-width: 0; }
+            .header-logo img { height: 26px; width: auto; }
+            .header-logo-text { font-size: 0.9rem; white-space: nowrap; }
+            
+            /* Buscador compacto al 60% */
             .header-search { 
                 order: 3; 
-                width: 60%; /* Reducido para que no empuje nada */
-                margin: 5px auto; 
+                width: 60%; 
+                position: absolute;
+                top: 60px; /* Lo ponemos debajo de la cabecera principal */
+                left: 5%;
+                z-index: 10;
             }
-            .search-input { padding: 6px 10px 6px 30px; font-size: 12px; }
-            .search-btn { padding: 6px 10px; font-size: 12px; }
+            .search-input { padding: 6px 30px; font-size: 12px; }
 
-            /* 2. PRODUCTOS: 2 por línea con PROPORCIÓN mantenida */
+            /* 2. PRODUCTOS: 2 por línea con PROPORCIÓN REAL */
             .products-grid {
                 grid-template-columns: repeat(2, 1fr); 
-                gap: 10px;
+                gap: 8px;
                 padding: 10px;
-                width: 100%;
-                box-sizing: border-box;
+                margin-top: 40px; /* Espacio para el buscador absoluto */
             }
             
-            .product-card {
-                height: auto; /* Altura automática basada en contenido */
-                display: flex;
-                flex-direction: column;
-            }
+            .product-card { height: auto; display: flex; flex-direction: column; }
 
             .product-card-image { 
                 height: auto;
-                aspect-ratio: 1 / 1; /* Mantiene la proporción cuadrada perfecta */
-                padding: 10px;
+                aspect-ratio: 1 / 1; /* Mantiene el cuadrado perfecto, no se estira */
+                padding: 8px;
             }
-
-            .product-card-content { 
-                padding: 10px;
-                flex-grow: 1;
-            }
-
             .product-card h3 { 
-                font-size: 0.75rem; 
-                min-height: 2rem; 
-                line-height: 1.2;
+                font-size: 0.7rem; 
+                min-height: 1.8rem; 
+                line-height: 1.1;
                 margin-bottom: 5px;
             }
-
-            .product-card .price { font-size: 1.1rem; }
-            .product-card .old-price { font-size: 0.8rem; }
-            .amazon-btn { 
-                padding: 8px; 
-                font-size: 10px; 
-                margin-top: auto; 
-            }
-
-            /* 3. PÁGINA DE PRODUCTO (Detalle) */
-            .product-detail-grid { grid-template-columns: 1fr; }
-            .product-detail-image-container { 
-                height: auto; 
-                aspect-ratio: 1 / 1; 
-                padding: 20px;
-            }
-            .product-detail-info-container { padding: 15px; }
-            .product-detail-title { font-size: 1.1rem; }
+            .product-card .price { font-size: 1rem; }
+            .amazon-btn { padding: 8px; font-size: 9px; margin-top: auto; }
         }
 
-        /* Bloqueo de desplazamiento horizontal accidental */
-        html, body {
-            max-width: 100%;
-            overflow-x: hidden;
-        }
+        /* Bloqueo de desplazamiento horizontal */
+        html, body { max-width: 100%; overflow-x: hidden; position: relative; }
 
-        /* Botón Ordenar ajustado */
-        .sort-dropdown-container {
-            margin: 10px;
-            width: 180px; /* Más pequeño para móvil */
-        }
+        /* Estilo del Botón Cuadrado de Ordenar */
+        .sort-dropdown-container { margin: 10px; width: 100%; max-width: 220px; position: relative; }
         .sort-dropdown-btn {
-            padding: 8px 12px;
-            font-size: 12px;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px 15px;
+            color: var(--text-color);
+            font-size: 13px;
+            font-weight: 700;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
         }
+        .sort-dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%; left: 0; right: 0;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            z-index: 2000;
+            flex-direction: column;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .sort-dropdown-menu.active { display: flex; }
+        .sort-opt { padding: 10px 15px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border-color); }
+        .sort-opt:hover { background: var(--bg-color); color: var(--primary-color); }
 
 
         /* ==================== DEBUG, HIDDEN & ANIMATIONS ==================== */
@@ -1941,18 +1934,17 @@
             </div>
 
             <div class="sort-dropdown-container">
-                <button class="sort-dropdown-btn" onclick="toggleSortMenu(event)">
-                    <span>Ordenar por: <span id="currentSortLabel" style="color: var(--primary-color);">Relevancia</span></span>
-                    <i class="fas fa-chevron-down" id="sortArrow"></i>
-                </button>
-                <div class="sort-dropdown-menu" id="sortDropdownMenu">
-                    <div class="sort-opt active" onclick="applySort('default', 'Relevancia')">Relevancia</div>
-                    <div class="sort-opt" onclick="applySort('price-asc', 'Precio menor')">Precio menor</div>
-                    <div class="sort-opt" onclick="applySort('price-desc', 'Precio mayor')">Precio mayor</div>
-                    <div class="sort-opt" onclick="applySort('discount-desc', 'Mayor descuento')">Mayor descuento</div>
-                    <div class="sort-opt" onclick="applySort('discount-asc', 'Menor descuento')">Menor descuento</div>
-                    <div class="sort-opt" onclick="applySort('votes', 'Más votadas')">Más votadas</div>
-                </div>
+                <button class="sort-dropdown-btn" onclick="window.toggleSortMenu(event)">
+                   <span>Ordenar por: <span id="currentSortLabel" style="color: var(--primary-color);">Relevancia</span></span>
+                   <i class="fas fa-chevron-down" id="sortArrow"></i>
+               </button>
+               <div class="sort-dropdown-menu" id="sortDropdownMenu">
+                   <div class="sort-opt" onclick="window.applySort('default', 'Relevancia')">Relevancia</div>
+                   <div class="sort-opt" onclick="window.applySort('price-asc', 'Precio menor')">Precio menor</div>
+                   <div class="sort-opt" onclick="window.applySort('price-desc', 'Precio mayor')">Precio mayor</div>
+                   <div class="sort-opt" onclick="window.applySort('discount-desc', 'Mayor descuento')">Mayor descuento</div>
+                   <div class="sort-opt" onclick="window.applySort('votes', 'Más votadas')">Más votadas</div>
+               </div>
             </div>
 
             <div class="products-grid" id="productsGrid"></div>
@@ -3798,54 +3790,39 @@ async function updateStats() {
 
 
         // ==================== DROPDOWN DE ORDENACIÓN (VERSIÓN A PRUEBA DE FALLOS) ====================
+        // FUNCIONES DE ORDENACIÓN GLOBALES
         window.toggleSortMenu = function(event) {
             if (event) event.stopPropagation();
             const menu = document.getElementById('sortDropdownMenu');
             const arrow = document.getElementById('sortArrow');
-            
             if (menu) {
                 menu.classList.toggle('active');
-                if (arrow) {
-                    arrow.style.transform = menu.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
-                }
+                if (arrow) arrow.style.transform = menu.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
             }
         };
 
         window.applySort = function(sortValue, label) {
-            // 1. Cerramos el menú
             const menu = document.getElementById('sortDropdownMenu');
-            const arrow = document.getElementById('sortArrow');
-            
             if (menu) menu.classList.remove('active');
-            if (arrow) arrow.style.transform = 'rotate(0deg)';
-            
-            // 2. Actualizamos el texto del botón
             document.getElementById('currentSortLabel').textContent = label;
             
-            // 3. Marcamos visualmente la opción elegida
-            document.querySelectorAll('.sort-opt').forEach(opt => {
-                opt.classList.toggle('active', opt.textContent === label);
-            });
-            
-            // 4. Ejecutamos la función de cargar productos
+            // Llamamos a tu función original de carga
             if (typeof setSort === 'function') {
                 setSort(sortValue);
             }
         };
 
-        // Cerramos el menú si el usuario pulsa en cualquier otro sitio
+        // Cerrar al pulsar fuera
         window.addEventListener('click', (e) => {
-            const menu = document.getElementById('sortDropdownMenu');
-            const arrow = document.getElementById('sortArrow');
             const container = document.querySelector('.sort-dropdown-container');
-            
-            if (menu && menu.classList.contains('active')) {
-                if (container && !container.contains(e.target)) {
-                    menu.classList.remove('active');
-                    if (arrow) arrow.style.transform = 'rotate(0deg)';
-                }
+            if (container && !container.contains(e.target)) {
+                const menu = document.getElementById('sortDropdownMenu');
+                if (menu) menu.classList.remove('active');
             }
         });
+
+
+
 
     </script>
 </body>
