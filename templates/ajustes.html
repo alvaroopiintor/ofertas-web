@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ meta.title }}</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #0088cc;
+            --primary-hover: #006699;
+            --danger-color: #e74c3c;
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --text-muted: #666;
+            --border-color: #eaeaea;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        body { background: var(--bg-color); color: var(--text-color); min-height: 100vh; padding: 40px 20px; }
+        
+        .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 20px; color: var(--text-muted); max-width: 1000px; margin: 0 auto 20px; }
+        .breadcrumb a { color: var(--primary-color); text-decoration: none; }
+        
+        .settings-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            gap: 30px;
+        }
+
+        /* SIDEBAR DE AJUSTES */
+        .settings-sidebar {
+            width: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .settings-tab {
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--primary-color);
+            font-weight: 500;
+            background: transparent;
+            border: none;
+            text-align: left;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+        .settings-tab:hover { background: rgba(0, 136, 204, 0.1); }
+        .settings-tab.active { background: var(--primary-color); color: #fff; }
+
+        /* PANEL PRINCIPAL */
+        .settings-content {
+            flex: 1;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 40px;
+            min-height: 400px;
+        }
+
+        .settings-section { display: none; }
+        .settings-section.active { display: block; }
+
+        .section-header { display: flex; justify-content: space-between; margin-bottom: 30px; }
+        .section-header h2 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+        .section-header p { color: var(--text-muted); font-size: 14px; max-width: 300px; line-height: 1.5; }
+
+        .form-group { margin-bottom: 25px; }
+        .form-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px; color: var(--text-muted); }
+        .form-group input {
+            width: 100%; padding: 12px 15px; border: 1px solid var(--border-color);
+            border-radius: 6px; font-size: 15px; outline: none; transition: border-color 0.2s;
+        }
+        .form-group input:focus { border-color: var(--primary-color); }
+
+        .btn { padding: 10px 20px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; font-size: 14px; transition: background 0.2s; color: #fff; }
+        .btn-primary { background: var(--primary-color); }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-danger { background: var(--danger-color); }
+        .btn-danger:hover { background: #c0392b; }
+
+        .profile-photo-area { display: flex; align-items: center; gap: 20px; margin-bottom: 30px; }
+        .avatar-circle { width: 80px; height: 80px; border-radius: 50%; background: #ccc; display: flex; align-items: center; justify-content: center; font-size: 30px; color: #fff; font-weight: bold; overflow: hidden; }
+        
+        .msg-box { display: none; padding: 10px; border-radius: 6px; margin-top: 15px; font-size: 14px; }
+        .msg-success { background: #d4edda; color: #155724; display: block; }
+        .msg-error { background: #f8d7da; color: #721c24; display: block; }
+
+        @media (max-width: 768px) {
+            .settings-container { flex-direction: column; }
+            .settings-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding-bottom: 10px; }
+            .settings-tab { white-space: nowrap; }
+            .section-header { flex-direction: column; gap: 20px; }
+            .settings-content { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="breadcrumb">
+        <a href="/"><i class="fas fa-home"></i></a>
+        <i class="fas fa-chevron-right" style="font-size: 10px;"></i>
+        <span>Ajustes</span>
+    </div>
+
+    <div class="settings-container">
+        <div class="settings-sidebar">
+            <button class="settings-tab active" onclick="switchTab('perfil')">Información de perfil</button>
+            <button class="settings-tab">Ajustes</button>
+            <button class="settings-tab" onclick="switchTab('password')">Actualizar contraseña</button>
+            <button class="settings-tab">Connected Accounts</button>
+            <button class="settings-tab" onclick="switchTab('delete')">Delete account</button>
+        </div>
+
+        <div class="settings-content">
+            
+            <div id="sec-perfil" class="settings-section active">
+                <div class="section-header">
+                    <div>
+                        <h2>Información de perfil</h2>
+                        <p>Actualice la información de su cuenta y la dirección de correo electrónico.</p>
+                    </div>
+                    <div style="flex: 1; max-width: 450px;">
+                        <label style="display:block; font-size:14px; margin-bottom:10px; color:var(--text-muted);">Foto</label>
+                        <div class="profile-photo-area">
+                            <div class="avatar-circle" id="userAvatar">U</div>
+                            <button class="btn" style="background:#fff; border:1px solid var(--border-color); color:var(--text-color);">Seleccione una nueva foto</button>
+                            <button class="btn btn-danger">Eliminar foto</button>
+                        </div>
+
+                        <form onsubmit="actualizarPerfil(event)">
+                            <div class="form-group">
+                                <label>Nombre</label>
+                                <input type="text" id="perfilNombre" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Correo electrónico</label>
+                                <input type="email" id="perfilEmail" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="btnPerfil">Guardar</button>
+                            <div id="msgPerfil" class="msg-box"></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sec-password" class="settings-section">
+                <div class="section-header">
+                    <div>
+                        <h2>Set Password</h2>
+                        <p>Asegúrese que su cuenta esté usando una contraseña larga y aleatoria para mantenerse seguro.</p>
+                    </div>
+                    <div style="flex: 1; max-width: 450px;">
+                        <form onsubmit="actualizarPassword(event)">
+                            <div class="form-group">
+                                <label>Nueva Contraseña</label>
+                                <input type="password" id="newPassword" required minlength="6">
+                            </div>
+                            <div class="form-group">
+                                <label>Confirmar contraseña</label>
+                                <input type="password" id="confirmPassword" required minlength="6">
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="btnPassword">Guardar</button>
+                            <div id="msgPassword" class="msg-box"></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sec-delete" class="settings-section">
+                <div class="section-header">
+                    <div>
+                        <h2>Borrar cuenta</h2>
+                        <p>Eliminar su cuenta de forma permanente.</p>
+                    </div>
+                    <div style="flex: 1; max-width: 450px;">
+                        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">
+                            Una vez que se elimine su cuenta, todos sus recursos y datos se eliminarán de forma permanente. Antes de borrar su cuenta, por favor descargue cualquier dato o información que desee conservar.
+                        </p>
+                        <button class="btn btn-danger" onclick="borrarCuenta()">Borrar cuenta</button>
+                        <div id="msgDelete" class="msg-box"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const authToken = localStorage.getItem('token');
+        let currentUser = JSON.parse(localStorage.getItem('user'));
+
+        // Proteger la ruta: Si entra sin sesión, lo echa al login
+        if (!authToken) {
+            window.location.href = '/login';
+        } else {
+            document.getElementById('perfilNombre').value = currentUser.nombre;
+            // Simulamos obtener el email (en el index no lo guardábamos en local, si no lo tienes, puedes modificar el login de app.py para devolver el email)
+            document.getElementById('perfilEmail').value = currentUser.email || '';
+            document.getElementById('userAvatar').textContent = currentUser.nombre.charAt(0).toUpperCase();
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(`sec-${tabId}`).classList.add('active');
+        }
+
+        function showMessage(elementId, msg, type) {
+            const el = document.getElementById(elementId);
+            el.textContent = msg;
+            el.className = `msg-box msg-${type}`;
+            setTimeout(() => el.className = 'msg-box', 4000);
+        }
+
+        async function actualizarPerfil(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnPerfil');
+            btn.innerHTML = 'Guardando...';
+            btn.disabled = true;
+
+            const nombre = document.getElementById('perfilNombre').value;
+            const email = document.getElementById('perfilEmail').value;
+
+            try {
+                const res = await fetch('/api/usuarios/perfil', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                    body: JSON.stringify({ nombre, email })
+                });
+                const data = await res.json();
+                
+                if (data.status === 'ok') {
+                    currentUser.nombre = nombre;
+                    currentUser.email = email;
+                    localStorage.setItem('user', JSON.stringify(currentUser));
+                    document.getElementById('userAvatar').textContent = nombre.charAt(0).toUpperCase();
+                    showMessage('msgPerfil', 'Perfil guardado correctamente', 'success');
+                } else {
+                    showMessage('msgPerfil', data.message, 'error');
+                }
+            } catch (err) { showMessage('msgPerfil', 'Error de conexión', 'error'); }
+            
+            btn.innerHTML = 'Guardar';
+            btn.disabled = false;
+        }
+
+        async function actualizarPassword(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnPassword');
+            const pwd1 = document.getElementById('newPassword').value;
+            const pwd2 = document.getElementById('confirmPassword').value;
+
+            if (pwd1 !== pwd2) {
+                showMessage('msgPassword', 'Las contraseñas no coinciden', 'error');
+                return;
+            }
+
+            btn.innerHTML = 'Guardando...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/usuarios/password', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                    body: JSON.stringify({ password: pwd1 })
+                });
+                const data = await res.json();
+                
+                if (data.status === 'ok') {
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                    showMessage('msgPassword', 'Contraseña actualizada con éxito', 'success');
+                } else {
+                    showMessage('msgPassword', data.message, 'error');
+                }
+            } catch (err) { showMessage('msgPassword', 'Error de conexión', 'error'); }
+            
+            btn.innerHTML = 'Guardar';
+            btn.disabled = false;
+        }
+
+        async function borrarCuenta() {
+            if (confirm("¿Estás completamente seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer.")) {
+                try {
+                    const res = await fetch('/api/usuarios', {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    });
+                    const data = await res.json();
+                    
+                    if (data.status === 'ok') {
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('user');
+                        alert("Cuenta eliminada. Te echaremos de menos.");
+                        window.location.href = '/';
+                    } else {
+                        showMessage('msgDelete', data.message, 'error');
+                    }
+                } catch (err) { showMessage('msgDelete', 'Error de conexión', 'error'); }
+            }
+        }
+    </script>
+</body>
+</html>
