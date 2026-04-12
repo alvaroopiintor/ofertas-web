@@ -1633,101 +1633,106 @@
 
         
         /* ==================== RESPONSIVE (ENCUADRE MÓVIL) ==================== */
+        /* ==================== RESPONSIVE (OPTIMIZADO) ==================== */
         @media (max-width: 1024px) {
-            .sidebar { display: none; }
+            /* IMPORTANTE: Cambiamos display:none por block para que la transición funcione */
+            .sidebar { 
+                display: block; 
+                transform: translateX(-100%); 
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
             .main-layout { grid-template-columns: 1fr; }
             .related-grid { grid-template-columns: repeat(2, 1fr); }
         }
         
         @media (max-width: 768px) {
-            .header-main {
-                flex-wrap: wrap;
-                height: auto;
-                padding: 12px;
-                gap: 10px;
-            }
-            .header-logo img { height: 35px; }
-            .header-logo-text { font-size: 1.2rem; }
-            .header-search { order: 3; width: 100%; margin-top: 5px; }
-            .search-input { padding: 10px 15px 10px 40px; font-size: 14px; }
-            .search-btn { padding: 10px 15px; font-size: 14px; }
+            .header-main { padding: 10px; gap: 8px; height: auto; }
+            .header-logo img { height: 32px; }
+            .header-logo-text { font-size: 1.1rem; }
 
+            /* PRODUCTOS EN 2 COLUMNAS */
             .products-grid {
-                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-                gap: 15px;
-            }
-
-            /* Detalle de producto encuadrado */
-            .product-detail-image-container {
-                padding: 20px;
-                height: 300px;
-            }
-            .product-detail-title {
-                font-size: 1.4rem;
-                text-align: center;
-                padding: 0 10px;
-            }
-            .product-detail-price-section {
-                justify-content: center;
-                padding: 15px;
-                flex-wrap: wrap;
+                grid-template-columns: repeat(2, 1fr); 
                 gap: 10px;
+                padding: 5px;
             }
-            .product-detail-price { font-size: 2.2rem; }
 
-            /* Votos y botones para el pulgar */
+            /* Ajuste de tarjetas para que sean más pequeñas */
+            .product-card-image { height: 140px; padding: 10px; }
+            .product-card h3 { 
+                font-size: 0.85rem; 
+                min-height: 2.4rem; 
+                margin-bottom: 5px;
+            }
+            .product-card .price { font-size: 1.2rem; }
+            .product-card .old-price { font-size: 0.85rem; }
+            .inline-discount { font-size: 11px; padding: 1px 4px; }
+            .amazon-btn { padding: 10px; font-size: 12px; }
+
+            /* Botones de voto en detalle */
             .product-detail-vote-section {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
                 gap: 10px;
-                padding: 15px;
             }
-            .product-detail-vote-btn {
-                padding: 12px 10px;
-                justify-content: center;
-                font-size: 16px;
-            }
-            .product-detail-vote-total {
-                grid-column: 1 / 3;
-                text-align: center;
-                margin: 10px 0 0 0;
-                font-size: 24px;
-            }
-
-            .product-detail-amazon-btn {
-                width: 100% !important;
-                margin-left: 0 !important;
-                padding: 18px;
-            }
-            #detailFavBtn {
-                width: 100% !important;
-                margin-left: 0 !important;
-                margin-top: 10px;
-            }
-
-            .related-grid { grid-template-columns: 1fr; }
-            .related-carousel { flex-direction: column; }
-            .next-related-btn { width: 100%; border-radius: 10px; height: 45px; }
-            .next-related-btn i { transform: rotate(90deg); }
         }
 
-        @media (max-width: 480px) {
-            .products-grid {
-                grid-template-columns: 1fr;
-                padding: 5px;
-            }
-            .product-card-image { height: 200px; }
-            .product-card h3 {
-                font-size: 0.95rem;
-                min-height: 2.6rem;
-            }
-            .product-card .price { font-size: 1.5rem; }
+        /* ESTILOS PARA EL NUEVO DROPDOWN DE ORDENACIÓN */
+        .sort-dropdown-container {
+            position: relative;
+            margin-bottom: 20px;
+            max-width: 300px;
         }
 
-        .categories {
-            -webkit-overflow-scrolling: touch;
-            padding-bottom: 10px;
+        .sort-dropdown-btn {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 18px;
+            color: var(--text-color);
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            transition: all 0.2s;
         }
+
+        .sort-dropdown-btn:hover { border-color: var(--primary-color); }
+
+        .sort-dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            margin-top: 5px;
+            z-index: 2000;
+            box-shadow: var(--shadow-hover);
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sort-dropdown-menu.active { display: flex; }
+
+        .sort-opt {
+            padding: 12px 18px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .sort-opt:last-child { border-bottom: none; }
+        .sort-opt:hover { background: var(--bg-color); color: var(--primary-color); }
+        .sort-opt.active { color: var(--primary-color); background: rgba(255,107,0,0.05); }
+
 
         /* ==================== DEBUG, HIDDEN & ANIMATIONS ==================== */
         .debug-console { 
@@ -1933,15 +1938,20 @@
                 <button class="category-btn" data-category="varios"><i class="fas fa-box-open"></i> Varios</button>
             </div>
 
-            <div class="sort-controls">
-                <span>Ordenar por:</span>
-                <button class="sort-btn active" data-sort="default">Relevancia</button>
-                <button class="sort-btn" data-sort="price-asc">Precio menor</button>
-                <button class="sort-btn" data-sort="price-desc">Precio mayor</button>
-                <button class="sort-btn" data-sort="discount-desc">Mayor descuento</button>
-                <button class="sort-btn" data-sort="discount-asc">Menor descuento</button>
-                <button class="sort-btn" data-sort="votes">Más votadas</button>
-            </div>
+            <div class="sort-dropdown-container">
+                <button class="sort-dropdown-btn" onclick="toggleSortDropdown()">
+                    <span>Ordenar por: <span id="currentSortLabel" style="color: var(--primary-color);">Relevancia</span></span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="sort-dropdown-menu" id="sortDropdownMenu">
+                    <div class="sort-option active" onclick="applySort('default', 'Relevancia')">Relevancia</div>
+                    <div class="sort-option" onclick="applySort('price-asc', 'Precio menor')">Precio menor</div>
+                    <div class="sort-option" onclick="applySort('price-desc', 'Precio mayor')">Precio mayor</div>
+                    <div class="sort-option" onclick="applySort('discount-desc', 'Mayor descuento')">Mayor descuento</div>
+                    <div class="sort-option" onclick="applySort('discount-asc', 'Menor descuento')">Menor descuento</div>
+                    <div class="sort-option" onclick="applySort('votes', 'Más votadas')">Más votadas</div>
+               </div>
+           </div>
 
             <div class="products-grid" id="productsGrid"></div>
             <button class="load-more" id="loadMoreBtn" style="display:none;"><i class="fas fa-box"></i> Cargar Más Ofertas</button>
@@ -3783,6 +3793,48 @@ async function updateStats() {
                 catSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         }
+
+
+        // ==================== DROPDOWN DE ORDENACIÓN ====================
+        function toggleSortMenu(event) {
+            event.stopPropagation();
+            const menu = document.getElementById('sortDropdownMenu');
+            const arrow = document.getElementById('sortArrow');
+            menu.classList.toggle('active');
+            if (arrow) {
+                arrow.style.transform = menu.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
+            }
+        }
+
+        function applySort(sortValue, label) {
+            // 1. Cerramos el menú
+            document.getElementById('sortDropdownMenu').classList.remove('active');
+            const arrow = document.getElementById('sortArrow');
+            if (arrow) arrow.style.transform = 'rotate(0deg)';
+            
+            // 2. Actualizamos el texto del botón
+            document.getElementById('currentSortLabel').textContent = label;
+            
+            // 3. Marcamos visualmente la opción elegida
+            document.querySelectorAll('.sort-opt').forEach(opt => {
+                opt.classList.toggle('active', opt.textContent === label);
+            });
+            
+            // 4. Ejecutamos tu función original para cargar productos
+            setSort(sortValue);
+        }
+
+        // Cerramos el menú si el usuario pulsa fuera de él
+        window.addEventListener('click', (e) => {
+            const container = document.querySelector('.sort-dropdown-container');
+            const menu = document.getElementById('sortDropdownMenu');
+            const arrow = document.getElementById('sortArrow');
+            
+            if (container && !container.contains(e.target)) {
+                if (menu) menu.classList.remove('active');
+                if (arrow) arrow.style.transform = 'rotate(0deg)';
+            }
+        });
 
     </script>
 </body>
