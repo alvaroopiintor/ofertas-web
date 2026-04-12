@@ -2372,22 +2372,18 @@
         async function showFavorites(e) {
             if (e) e.preventDefault();
             
-            // 1. Verificamos si el usuario está logueado
             if (!authToken) {
-                alert("Inicia sesión para ver tu lista de favoritos ❤️");
-                openAuthModal();
+                window.location.href = '/login'; // Te lleva directo sin alert
                 return;
             }
             
-            showLoading(); // Mostramos el icono de carga
+            showLoading(); 
             try {
-                // 2. Pedimos los favoritos al servidor
                 const res = await fetch('/api/favoritos', {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
                 const data = await res.json();
                 
-                // 3. Transformamos los datos para que el diseño sea igual al de la home
                 displayedProducts = data.favoritos.map(p => ({
                     ...p,
                     precioAntes: p.precio_antes,
@@ -2396,18 +2392,18 @@
                     timestamp: p.fecha_creacion || new Date()
                 }));
                 
-                // 4. Dibujamos los productos en el grid
-                renderProducts();
+                // ESCONDEMOS EL RESTO DE SECCIONES PARA QUE SE VEA EL GRID
+                document.getElementById('productDetailSection').classList.remove('active');
+                document.getElementById('blogSection').style.display = 'none';
+                document.getElementById('hotSection').style.display = 'none';
+                document.getElementById('storesSection').style.display = 'none';
+                document.getElementById('homeSection').style.display = 'block';
                 
-                // Ocultamos el botón de "Cargar más" ya que aquí mostramos todos de golpe
+                renderProducts(); // Dibuja los productos con el mismo diseño exacto
+                
                 document.getElementById('loadMoreBtn').style.display = 'none';
-                
-                // Cambiamos el estado visual de los menús
                 document.querySelectorAll('.sidebar-btn').forEach(btn => btn.classList.remove('active'));
-                
-                logDebug("❤️ Lista de favoritos cargada");
             } catch (err) {
-                console.error("Error cargando favoritos:", err);
                 showError();
             }
         }
@@ -3682,35 +3678,43 @@ async function updateStats() {
             coldBtn.style.pointerEvents = 'auto';
         }
 
-        function renderHotProducts() {
-            const grid = document.getElementById('hotProductsGrid');
-            if (!grid) return;
-            
-            const sorted = [...allProducts].sort((a, b) => {
-                const votosA = (a.votosHot || 0) - (a.votosCold || 0);
-                const votosB = (b.votosHot || 0) - (b.votosCold || 0);
-                return votosB - votosA;
-            }).slice(0, 20);
-            
-            grid.innerHTML = '';
-            sorted.forEach(producto => {
-                const card = document.createElement('div');
-                card.className = 'product-card';
-                card.onclick = () => showProductDetailPage(producto);
-                card.innerHTML = `
-                    <div class="product-card-image">
-                        <img src="${sanitizeURL(producto.imagen) || 'https://via.placeholder.com/300x200?text=Producto'}" alt="${producto.nombre}" loading="lazy">
-                    </div>
-                    <div class="product-card-content">
-                        <h3>${sanitizeHTML(producto.nombre || '')}</h3>
-                        <div class="price-container">
-                            <span class="price">${producto.precio || ''}</span>
-                        </div>
-                        <a href="${sanitizeURL(producto.link) || '#'}" target="_blank" class="amazon-btn" onclick="event.stopPropagation()">Ver Oferta →</a>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
+        // --- MÁS VOTADAS (30 productos, de mejor a peor, mismo diseño) ---
+        async function renderHotProducts() {
+            showLoading();
+            try {
+                // Pedimos 30 productos ordenados por votos
+                const res = await fetch(`${API_BASE}?sort=votes&limit=30&activos=true`);
+                const data = await res.json();
+                
+                const hotProducts = data.ofertas.map(p => ({
+                    ...p,
+                    precioAntes: p.precio_antes,
+                    votosHot: p.votos_calientes || 0,
+                    votosCold: p.votos_frios || 0,
+                    timestamp: p.fecha_creacion
+                }));
+                
+                const hotGrid = document.getElementById('hotProductsGrid');
+                hotGrid.innerHTML = ''; 
+                
+                // Truco para que use el CSS principal y mantenga las proporciones
+                const mainGrid = document.getElementById('productsGrid');
+                const tempDisplayed = displayedProducts; 
+                
+                displayedProducts = hotProducts; 
+                mainGrid.id = 'tempMainGrid';    
+                hotGrid.id = 'productsGrid';     
+                
+                renderProducts(); // Pinta usando toda la lógica (precios, tachados, enlaces)
+                
+                // Restauramos los IDs
+                hotGrid.id = 'hotProductsGrid';
+                mainGrid.id = 'productsGrid';
+                displayedProducts = tempDisplayed;
+                
+            } catch (err) {
+                console.error("Error cargando Más Votadas:", err);
+            }
         }
 
         function setCategoryFromDetail(event) {
