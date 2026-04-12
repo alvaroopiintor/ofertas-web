@@ -794,19 +794,35 @@ def actualizar_password(current_user_id):
         logger.error(f"Error actualizando password: {e}")
         return jsonify({"status": "error", "message": "Error interno del servidor"}), 500
 
+
 @app.route("/api/usuarios", methods=["DELETE"])
 @token_required
 def borrar_cuenta(current_user_id):
+    data = request.json
+    password = data.get("password", "")
+
+    if not password:
+        return jsonify({"status": "error", "message": "Se requiere la contraseña para eliminar la cuenta"}), 400
+
     try:
         with get_db_connection() as conn:
             c = conn.cursor()
+            # 1. Obtenemos la contraseña actual del usuario
+            c.execute("SELECT password_hash FROM usuarios WHERE id = %s", (current_user_id,))
+            row = c.fetchone()
+            
+            # 2. Verificamos si la contraseña coincide
+            if not row or not check_password_hash(row[0], password):
+                return jsonify({"status": "error", "message": "Contraseña incorrecta"}), 401
+
+            # 3. Si coincide, borramos
             c.execute("DELETE FROM usuarios WHERE id = %s", (current_user_id,))
             conn.commit()
+            
         return jsonify({"status": "ok", "message": "Cuenta eliminada"})
     except Exception as e:
         logger.error(f"Error borrando cuenta: {e}")
         return jsonify({"status": "error", "message": "Error interno del servidor"}), 500
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
