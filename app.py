@@ -742,6 +742,71 @@ def toggle_favorito(current_user_id, id):
         return jsonify({"status": "error", "message": "Error al procesar favorito"}), 500
 
 
+# ==================== RUTAS DE AJUSTES Y PERFIL ====================
+
+@app.route("/ajustes")
+def pagina_ajustes():
+    return render_template("ajustes.html", meta={"title": "Ajustes de Perfil - SPAIN LINKS"})
+
+@app.route("/api/usuarios/perfil", methods=["PUT"])
+@token_required
+def actualizar_perfil(current_user_id):
+    data = request.json
+    nombre = data.get("nombre", "").strip()
+    email = data.get("email", "").strip().lower()
+
+    if not nombre or not email:
+        return jsonify({"status": "error", "message": "Nombre y email son obligatorios"}), 400
+
+    try:
+        with get_db_connection() as conn:
+            c = conn.cursor()
+            # Comprobar si el nuevo email ya está en uso por otro usuario
+            c.execute("SELECT id FROM usuarios WHERE email = %s AND id != %s", (email, current_user_id))
+            if c.fetchone():
+                return jsonify({"status": "error", "message": "Este email ya está en uso por otra cuenta"}), 409
+
+            c.execute("UPDATE usuarios SET nombre = %s, email = %s WHERE id = %s", (nombre, email, current_user_id))
+            conn.commit()
+            
+        return jsonify({"status": "ok", "message": "Perfil actualizado", "usuario": {"id": current_user_id, "nombre": nombre, "email": email}})
+    except Exception as e:
+        logger.error(f"Error actualizando perfil: {e}")
+        return jsonify({"status": "error", "message": "Error interno del servidor"}), 500
+
+@app.route("/api/usuarios/password", methods=["PUT"])
+@token_required
+def actualizar_password(current_user_id):
+    data = request.json
+    password = data.get("password", "")
+
+    if len(password) < 6:
+        return jsonify({"status": "error", "message": "La contraseña debe tener al menos 6 caracteres"}), 400
+
+    try:
+        hash_pw = generate_password_hash(password)
+        with get_db_connection() as conn:
+            c = conn.cursor()
+            c.execute("UPDATE usuarios SET password_hash = %s WHERE id = %s", (hash_pw, current_user_id))
+            conn.commit()
+        return jsonify({"status": "ok", "message": "Contraseña actualizada"})
+    except Exception as e:
+        logger.error(f"Error actualizando password: {e}")
+        return jsonify({"status": "error", "message": "Error interno del servidor"}), 500
+
+@app.route("/api/usuarios", methods=["DELETE"])
+@token_required
+def borrar_cuenta(current_user_id):
+    try:
+        with get_db_connection() as conn:
+            c = conn.cursor()
+            c.execute("DELETE FROM usuarios WHERE id = %s", (current_user_id,))
+            conn.commit()
+        return jsonify({"status": "ok", "message": "Cuenta eliminada"})
+    except Exception as e:
+        logger.error(f"Error borrando cuenta: {e}")
+        return jsonify({"status": "error", "message": "Error interno del servidor"}), 500
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
