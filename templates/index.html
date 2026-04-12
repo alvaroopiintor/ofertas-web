@@ -1646,88 +1646,94 @@
         }
         
         @media (max-width: 768px) {
-            /* 1. CABECERA: Encaje total */
+            /* 1. CABECERA AMAZON: 2 Filas independientes */
             .header-main {
-                padding: 8px;
-                gap: 5px;
-                flex-wrap: nowrap; /* Evita que los elementos se amontonen */
-                justify-content: space-between;
-                height: 60px;
+                flex-wrap: wrap; /* Permite que el buscador caiga a la línea de abajo */
+                height: auto;
+                padding: 10px;
+                gap: 10px 0; /* Espacio vertical entre la fila 1 y 2 */
             }
-            .header-left { gap: 5px; flex-shrink: 1; min-width: 0; }
-            .header-logo img { height: 26px; width: auto; }
-            .header-logo-text { font-size: 0.9rem; white-space: nowrap; }
+            .header-left { flex: 1; min-width: 50%; }
+            .header-logo img { height: 28px; }
+            .header-logo-text { font-size: 1rem; }
             
-            /* Buscador compacto al 60% */
+            .header-actions { flex: 1; display: flex; justify-content: flex-end; }
+            
+            /* Buscador en la Fila 2 al 100% de ancho */
             .header-search { 
-                order: 3; 
-                width: 60%; 
-                position: absolute;
-                top: 60px; /* Lo ponemos debajo de la cabecera principal */
-                left: 5%;
-                z-index: 10;
+                order: 4; /* Lo empuja al final de todo */
+                width: 100%; 
+                margin: 0;
+                position: static; /* Quitamos comportamientos extraños */
             }
-            .search-input { padding: 6px 30px; font-size: 12px; }
+            .search-input { padding: 10px 15px 10px 40px; font-size: 14px; }
+            .search-btn { padding: 10px 15px; font-size: 14px; }
 
-            /* 2. PRODUCTOS: 2 por línea con PROPORCIÓN REAL */
+            /* 2. PRODUCTOS: 2 Columnas Estándar E-commerce */
             .products-grid {
                 grid-template-columns: repeat(2, 1fr); 
                 gap: 8px;
-                padding: 10px;
-                margin-top: 40px; /* Espacio para el buscador absoluto */
+                padding: 8px;
+                margin-top: 10px;
             }
             
-            .product-card { height: auto; display: flex; flex-direction: column; }
+            .product-card { 
+                height: 100%; 
+                display: flex; 
+                flex-direction: column; 
+            }
 
             .product-card-image { 
+                width: 100%;
                 height: auto;
-                aspect-ratio: 1 / 1; /* Mantiene el cuadrado perfecto, no se estira */
-                padding: 8px;
+                aspect-ratio: 1 / 1; /* LA REGLA DE ORO: Cuadrado perfecto siempre */
+                padding: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
+
+            .product-card-image img {
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain; /* Ajusta la foto dentro del cuadrado sin deformar */
+            }
+
+            .product-card-content {
+                padding: 10px;
+                display: flex;
+                flex-direction: column;
+                flex-grow: 1;
+            }
+
+            /* LA REGLA DE LAS 2 LÍNEAS */
             .product-card h3 { 
-                font-size: 0.7rem; 
-                min-height: 1.8rem; 
-                line-height: 1.1;
-                margin-bottom: 5px;
+                font-size: 13px; /* Tamaño ideal lectura móvil */
+                line-height: 1.3;
+                margin-bottom: 8px;
+                display: -webkit-box;
+                -webkit-line-clamp: 2; /* Corta en la línea 2 */
+                -webkit-box-orient: vertical;
+                overflow: hidden;
             }
-            .product-card .price { font-size: 1rem; }
-            .amazon-btn { padding: 8px; font-size: 9px; margin-top: auto; }
-        }
 
-        /* Bloqueo de desplazamiento horizontal */
-        html, body { max-width: 100%; overflow-x: hidden; position: relative; }
-
-        /* Estilo del Botón Cuadrado de Ordenar */
-        .sort-dropdown-container { margin: 10px; width: 100%; max-width: 220px; position: relative; }
-        .sort-dropdown-btn {
-            background: var(--card-bg);
-            border: 2px solid var(--border-color);
-            border-radius: 6px;
-            padding: 10px 15px;
-            color: var(--text-color);
-            font-size: 13px;
-            font-weight: 700;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
+            .product-card .price { font-size: 18px; font-weight: 900; }
+            .product-card .old-price { font-size: 12px; }
+            .inline-discount { font-size: 11px; padding: 2px 4px; }
+            
+            .amazon-btn { 
+                padding: 10px; 
+                font-size: 12px; 
+                margin-top: auto; /* Empuja siempre el botón hacia el fondo de la tarjeta */
+            }
+            
+            /* Ajuste del botón Ordenar para que ocupe todo el ancho en móvil */
+            .sort-dropdown-container {
+                margin: 10px 8px;
+                width: calc(100% - 16px);
+                max-width: none;
+            }
         }
-        .sort-dropdown-menu {
-            display: none;
-            position: absolute;
-            top: 100%; left: 0; right: 0;
-            background: var(--card-bg);
-            border: 2px solid var(--border-color);
-            border-radius: 6px;
-            z-index: 2000;
-            flex-direction: column;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .sort-dropdown-menu.active { display: flex; }
-        .sort-opt { padding: 10px 15px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border-color); }
-        .sort-opt:hover { background: var(--bg-color); color: var(--primary-color); }
-
 
         /* ==================== DEBUG, HIDDEN & ANIMATIONS ==================== */
         .debug-console { 
@@ -2357,7 +2363,6 @@
         async function toggleFavorite(e, productId) {
             e.stopPropagation();
             if (!authToken) {
-                alert("Inicia sesión para guardar tus favoritos ❤️");
                 openAuthModal();
                 return;
             }
@@ -3194,7 +3199,6 @@ function prevRelatedProducts() {
         async function setUserVote(productId, voteType) {
             // 1. COMPROBAR SI ESTÁ LOGUEADO
             if (!authToken) {
-                alert("Debes iniciar sesión para votar en las ofertas.");
                 openAuthModal();
                 return null;
             }
