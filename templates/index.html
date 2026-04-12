@@ -1632,106 +1632,111 @@
 
 
         
-        /* ==================== RESPONSIVE (ENCUADRE MÓVIL) ==================== */
-        /* ==================== RESPONSIVE (OPTIMIZADO) ==================== */
+        /* ==================== RESPONSIVE (ESTILO APP PROFESIONAL) ==================== */
+        /* ==================== RESPONSIVE DEFINITIVO (ENCUADRE TOTAL) ==================== */
         @media (max-width: 1024px) {
-            /* IMPORTANTE: Cambiamos display:none por block para que la transición funcione */
             .sidebar { 
-                display: block; 
+                display: block !important; 
                 transform: translateX(-100%); 
+                transition: transform 0.3s ease;
             }
-            .sidebar.active {
-                transform: translateX(0);
-            }
+            .sidebar.active { transform: translateX(0); }
             .main-layout { grid-template-columns: 1fr; }
-            .related-grid { grid-template-columns: repeat(2, 1fr); }
         }
         
         @media (max-width: 768px) {
-            .header-main { padding: 10px; gap: 8px; height: auto; }
-            .header-logo img { height: 32px; }
-            .header-logo-text { font-size: 1.1rem; }
+            /* 1. CABECERA: Ajuste para que no se salga nada */
+            header { width: 100%; overflow: hidden; }
+            .header-main {
+                padding: 10px 8px;
+                gap: 5px;
+                flex-wrap: nowrap; /* Mantiene logo y botones en una línea */
+                justify-content: space-between;
+            }
+            .header-left { gap: 5px; flex-shrink: 1; min-width: 0; }
+            .header-logo img { height: 28px; width: auto; }
+            .header-logo-text { font-size: 1rem; white-space: nowrap; }
+            
+            /* El buscador ahora se adapta sin empujar */
+            .header-search { 
+                order: 3; 
+                width: 95%; 
+                margin: 5px auto; 
+            }
+            .search-input { padding: 8px 10px 8px 35px; font-size: 13px; }
+            .search-btn { padding: 8px 12px; font-size: 13px; }
 
-            /* PRODUCTOS EN 2 COLUMNAS */
+            /* 2. PRODUCTOS: 2 Columnas con PROPORCIÓN mantenida */
             .products-grid {
                 grid-template-columns: repeat(2, 1fr); 
-                gap: 10px;
-                padding: 5px;
+                gap: 8px;
+                padding: 8px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            
+            .product-card {
+                display: flex;
+                flex-direction: column;
+                height: 100%; /* Para que todas midan lo mismo en la fila */
             }
 
-            /* Ajuste de tarjetas para que sean más pequeñas */
-            .product-card-image { height: 140px; padding: 10px; }
+            .product-card-image { 
+                height: auto;
+                aspect-ratio: 1 / 1; /* Esto mantiene la imagen siempre cuadrada */
+                padding: 10px;
+            }
+
+            .product-card-content { 
+                padding: 10px;
+                flex-grow: 1;
+                display: flex;
+                flex-direction: column;
+            }
+
             .product-card h3 { 
-                font-size: 0.85rem; 
-                min-height: 2.4rem; 
-                margin-bottom: 5px;
+                font-size: 0.75rem; 
+                line-height: 1.2;
+                min-height: 2.4rem; /* 2 líneas de texto aprox */
+                overflow: hidden;
             }
-            .product-card .price { font-size: 1.2rem; }
-            .product-card .old-price { font-size: 0.85rem; }
-            .inline-discount { font-size: 11px; padding: 1px 4px; }
-            .amazon-btn { padding: 10px; font-size: 12px; }
 
-            /* Botones de voto en detalle */
-            .product-detail-vote-section {
+            .product-card .price { font-size: 1rem; }
+            .product-card .old-price { font-size: 0.75rem; }
+            .amazon-btn { 
+                padding: 8px; 
+                font-size: 10px; 
+                margin-top: auto; /* Empuja el botón siempre al final */
+            }
+
+            /* 3. DETALLE DE PRODUCTO: Estructura PC compacta */
+            .product-detail-grid {
                 display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
+                grid-template-columns: 1fr; /* En móvil muy pequeño mejor apilado pero proporcionado */
+            }
+            .product-detail-image-container {
+                height: auto;
+                aspect-ratio: 4 / 3;
+                padding: 15px;
             }
         }
 
-        /* ESTILOS PARA EL NUEVO DROPDOWN DE ORDENACIÓN */
-        .sort-dropdown-container {
-            position: relative;
-            margin-bottom: 20px;
-            max-width: 300px;
-        }
-
-        .sort-dropdown-btn {
-            background: var(--card-bg);
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            padding: 12px 18px;
-            color: var(--text-color);
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+        /* Evitar scroll horizontal en toda la web */
+        body, html {
+            overflow-x: hidden;
             width: 100%;
-            transition: all 0.2s;
+            position: relative;
         }
 
-        .sort-dropdown-btn:hover { border-color: var(--primary-color); }
-
-        .sort-dropdown-menu {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: var(--card-bg);
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            margin-top: 5px;
-            z-index: 2000;
-            box-shadow: var(--shadow-hover);
-            flex-direction: column;
-            overflow: hidden;
+        /* Botón Ordenar: Ajuste de tamaño para móvil */
+        .sort-dropdown-container {
+            margin: 10px;
+            max-width: 200px;
         }
-
-        .sort-dropdown-menu.active { display: flex; }
-
-        .sort-opt {
-            padding: 12px 18px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background 0.2s;
-            border-bottom: 1px solid var(--border-color);
+        .sort-dropdown-btn {
+            padding: 8px 12px;
+            font-size: 13px;
         }
-        .sort-opt:last-child { border-bottom: none; }
-        .sort-opt:hover { background: var(--bg-color); color: var(--primary-color); }
-        .sort-opt.active { color: var(--primary-color); background: rgba(255,107,0,0.05); }
 
 
         /* ==================== DEBUG, HIDDEN & ANIMATIONS ==================== */
@@ -1939,19 +1944,18 @@
             </div>
 
             <div class="sort-dropdown-container">
-                <button class="sort-dropdown-btn" onclick="toggleSortDropdown()">
+                <button class="sort-dropdown-btn" onclick="toggleSortMenu(event)">
                     <span>Ordenar por: <span id="currentSortLabel" style="color: var(--primary-color);">Relevancia</span></span>
-                    <i class="fas fa-chevron-down"></i>
+                    <i class="fas fa-chevron-down" id="sortArrow"></i>
                 </button>
                 <div class="sort-dropdown-menu" id="sortDropdownMenu">
-                    <div class="sort-option active" onclick="applySort('default', 'Relevancia')">Relevancia</div>
-                    <div class="sort-option" onclick="applySort('price-asc', 'Precio menor')">Precio menor</div>
-                    <div class="sort-option" onclick="applySort('price-desc', 'Precio mayor')">Precio mayor</div>
-                    <div class="sort-option" onclick="applySort('discount-desc', 'Mayor descuento')">Mayor descuento</div>
-                    <div class="sort-option" onclick="applySort('discount-asc', 'Menor descuento')">Menor descuento</div>
-                    <div class="sort-option" onclick="applySort('votes', 'Más votadas')">Más votadas</div>
-               </div>
-           </div>
+                    <div class="sort-opt active" onclick="applySort('default', 'Relevancia')">Relevancia</div>
+                    <div class="sort-opt" onclick="applySort('price-asc', 'Precio menor')">Precio menor</div>
+                    <div class="sort-opt" onclick="applySort('price-desc', 'Precio mayor')">Precio mayor</div>
+                    <div class="sort-opt" onclick="applySort('discount-desc', 'Mayor descuento')">Mayor descuento</div>
+                    <div class="sort-opt" onclick="applySort('votes', 'Más votadas')">Más votadas</div>
+                </div>
+            </div>
 
             <div class="products-grid" id="productsGrid"></div>
             <button class="load-more" id="loadMoreBtn" style="display:none;"><i class="fas fa-box"></i> Cargar Más Ofertas</button>
