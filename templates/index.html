@@ -1805,32 +1805,46 @@
         .sidebar-close-btn:hover { color: var(--danger-color); }
 
 
+        /* Dropdown de Usuario */
+        .user-dropdown {
+            display: none; position: absolute; top: 100%; right: 0;
+            background: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 8px; box-shadow: var(--shadow-hover);
+            z-index: 2000; min-width: 180px; overflow: hidden; margin-top: 10px;
+        }
+        .dropdown-item {
+            display: flex; align-items: center; gap: 10px; padding: 12px 15px;
+            color: var(--text-color); text-decoration: none; border-bottom: 1px solid var(--border-color);
+            transition: background 0.2s; font-size: 14px;
+        }
+        .dropdown-item:last-child { border-bottom: none; }
+        .dropdown-item:hover { background: var(--bg-color); color: var(--primary-color); }
+        .dropdown-item.danger:hover { color: var(--danger-color); }
+
+
     </style>
 </head>
 <body>
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
     
     <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header" style="display: flex; align-items: center; padding: 20px;">
-            <button class="sidebar-close-btn" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
+        <div class="sidebar-header" style="display: flex; align-items: center; justify-content: space-between; padding: 20px;">
             <a href="#" class="header-logo" onclick="showHome(event); toggleSidebar()">
                 <span class="header-logo-text">SPAIN <span>LINKS</span></span>
             </a>
+            <button class="sidebar-close-btn" style="margin-right: 0;" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
         </div>
         
         <nav class="sidebar-nav">
             <div class="sidebar-item">
                 <a href="#" class="sidebar-btn active" onclick="showHome(event); toggleSidebar()">
-                    <i class="fas fa-home"></i>
-                    <span>Inicio</span>
+                    <i class="fas fa-home"></i> <span>Inicio</span>
                 </a>
             </div>
-
             <div class="sidebar-item">
                 <button class="sidebar-btn" onclick="toggleCategoriesSubmenu(event)" id="btnCategories">
-                    <i class="fas fa-folder"></i>
-                    <span>Categorías</span>
-                    <i class="fas fa-chevron-down submenu-icon" id="catSubmenuIcon" style="margin-left: auto; transition: transform 0.3s;"></i>
+                    <i class="fas fa-folder"></i> <span>Categorías</span>
+                    <i class="fas fa-chevron-down submenu-icon" id="catSubmenuIcon" style="margin-left: auto;"></i>
                 </button>
                 <div class="sidebar-submenu" id="sidebarCategoriesMenu" style="display: none; flex-direction: column; padding-left: 15px; margin-top: 5px; gap: 4px;">
                     <a href="#" class="sidebar-sub-btn" onclick="setCategory('electronica'); toggleSidebar()"><i class="fas fa-laptop" style="width:20px;"></i> Electrónica <span class="category-count" id="count-electronica-sidebar">0</span></a>
@@ -1851,15 +1865,12 @@
 
             <div class="sidebar-item">
                 <a href="#" class="sidebar-btn" onclick="showSection(event, 'hot'); toggleSidebar()">
-                    <i class="fas fa-fire"></i>
-                    <span>Más Votadas</span>
+                    <i class="fas fa-fire"></i> <span>Más Votadas</span>
                 </a>
             </div>
-
             <div class="sidebar-item">
                 <a href="#" class="sidebar-btn" onclick="showSection(event, 'blog'); toggleSidebar()">
-                    <i class="fas fa-newspaper"></i>
-                    <span>Blog</span>
+                    <i class="fas fa-newspaper"></i> <span>Blog</span>
                 </a>
             </div>
         </nav>
@@ -1869,18 +1880,24 @@
         <div class="sidebar-widget">
             <h3><i class="fas fa-chart-line"></i> Estadísticas</h3>
             <ul class="stats-list">
-                <li class="stats-item">
-                    <span class="stats-label"><i class="fas fa-box-open" style="color: var(--primary-color);"></i> Ofertas Activas</span>
-                    <span class="stats-value" id="statActiveSidebar">0</span>
-                </li>
-                <li class="stats-item">
-                    <span class="stats-label"><i class="fas fa-calendar-day" style="color: #27ae60;"></i> Chollos de Hoy</span>
-                    <span class="stats-value" id="statTodaySidebar" style="color: #27ae60; font-weight: 800;">0</span>
-                </li>
+                <li class="stats-item"><span class="stats-label"><i class="fas fa-box-open" style="color: var(--primary-color);"></i> Ofertas Activas</span><span class="stats-value" id="statActiveSidebar">0</span></li>
+                <li class="stats-item"><span class="stats-label"><i class="fas fa-calendar-day" style="color: #27ae60;"></i> Chollos de Hoy</span><span class="stats-value" id="statTodaySidebar" style="color: #27ae60; font-weight: 800;">0</span></li>
             </ul>
         </div>
-    </aside>
 
+        <div class="sidebar-widget">
+            <h3><i class="fas fa-trophy"></i> 🔥 Destacados del Día</h3>
+            <ul class="featured-products-list" id="featuredProductsList">
+                <li style="text-align: center; color: var(--text-muted); padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Cargando...</li>
+            </ul>
+        </div>
+
+        <div class="sidebar-widget telegram-widget" style="margin: 15px;">
+            <h3><i class="fab fa-telegram-plane"></i> Canal Telegram</h3>
+            <p>¡Recibe las mejores ofertas en tiempo real!</p>
+            <a href="https://t.me/SPAINAMAZONLINKS" target="_blank" class="telegram-join-btn"><i class="fab fa-telegram"></i> Unirse Ahora</a>
+        </div>
+    </aside>
 
     <header>
         <div class="header-main">
@@ -1904,9 +1921,16 @@
             </div>
             
             <div class="header-actions">
-                <button class="nav-link-btn" id="userMenuBtn" onclick="openAuthModal()">
-                    <i class="fas fa-user-circle"></i> <span id="userMenuText">Iniciar sesión</span>
-                </button>
+                <div style="position: relative;">
+                    <button class="nav-link-btn" id="userMenuBtn" onclick="toggleUserMenu(event)">
+                        <i class="fas fa-user-circle"></i> <span id="userMenuText">Iniciar Sesión</span>
+                    </button>
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="/ajustes" class="dropdown-item"><i class="fas fa-cog"></i> Ajustes</a>
+                        <a href="#" onclick="handleLogout(event)" class="dropdown-item danger"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
+                    </div>
+                </div>
+
                 <button class="nav-link-btn" onclick="showFavorites(event)">
                     <i class="fas fa-heart" style="color: var(--danger-color);"></i> Mis Favoritos
                 </button>
@@ -2208,21 +2232,7 @@
         let currentUser = JSON.parse(localStorage.getItem('user')) || null;
         let authToken = localStorage.getItem('token') || null;
 
-        // --- FUNCIONES DE INTERFAZ (MODAL) ---
-        function openAuthModal() {
-            if (currentUser) {
-                if (confirm(`Hola ${currentUser.nombre}, ¿quieres cerrar sesión?`)) {
-                    handleLogout();
-                }
-            } else {
-                // Redirigir a la nueva página independiente
-                window.location.href = '/login';
-            }
-        }
         
-        // Ya puedes borrar la función closeAuthModal() y switchAuthTab() de index.html
-
-
 
         function closeAuthModal() {
             document.getElementById('authModal').classList.remove('active');
@@ -2316,19 +2326,7 @@
             window.location.reload(); // Recargamos para limpiar estados
         }
 
-        // Función para cambiar el texto del botón del header
-        function updateUIForUser() {
-            const btnText = document.getElementById('userMenuText');
-            const btn = document.getElementById('userMenuBtn');
-            
-            if (currentUser) {
-                btnText.textContent = `Hola, ${currentUser.nombre.split(' ')[0]}`;
-                btn.classList.add('logged-in');
-            } else {
-                btnText.textContent = "Entrar";
-                btn.classList.remove('logged-in');
-            }
-        }
+        
 
 
         let userFavorites = new Set(); // Guardaremos aquí los IDs de los favoritos del usuario
@@ -3813,33 +3811,75 @@ async function updateStats() {
         });
 
 
-// ==================== BUSCADOR EN TIEMPO REAL ====================
-        function liveSearch(query) {
+// =================================================================
+        // --- 1. MANEJO DEL MENÚ DE USUARIO Y SESIÓN ---
+        // =================================================================
+        function toggleUserMenu(e) {
+            e.stopPropagation();
+            if (!currentUser) {
+                window.location.href = '/login'; // Si no está logueado, va al login sin alerts
+                return;
+            }
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.style.display = dropdown.style.display === 'flex' ? 'none' : 'flex';
+            dropdown.style.flexDirection = 'column';
+        }
+
+        // Cierra el menú al pulsar fuera
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('userDropdown');
+            if (dropdown && !e.target.closest('#userMenuBtn') && !e.target.closest('.user-dropdown')) {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        function updateUIForUser() {
+            const btnText = document.getElementById('userMenuText');
+            if (currentUser && btnText) {
+                btnText.textContent = `Hola, ${currentUser.nombre.split(' ')[0]}`;
+            } else if (btnText) {
+                btnText.textContent = "Iniciar Sesión";
+            }
+        }
+
+        // Llamamos a la actualización al cargar
+        updateUIForUser();
+
+
+        // =================================================================
+        // --- 2. BUSCADOR EN TIEMPO REAL CON LA API ---
+        // =================================================================
+        let searchTimeout;
+        async function liveSearch(query) {
             const suggestions = document.getElementById('searchSuggestions');
             if (query.length < 2) {
                 suggestions.style.display = 'none';
                 return;
             }
-
-            const matches = allProducts.filter(p => 
-                p.nombre.toLowerCase().includes(query.toLowerCase()) || 
-                p.categoria.toLowerCase().includes(query.toLowerCase())
-            ).slice(0, 5); 
-
-            if (matches.length > 0) {
-                suggestions.innerHTML = matches.map(p => `
-                    <div class="suggestion-card" onclick="showProductDetailPage(${JSON.stringify(p).replace(/"/g, '&quot;')}); hideSuggestions()">
-                        <img src="${p.imagen}">
-                        <div class="info">
-                            <div class="title">${p.nombre}</div>
-                            <div class="price">${p.precio}</div>
-                        </div>
-                    </div>
-                `).join('');
-                suggestions.style.display = 'flex';
-            } else {
-                suggestions.style.display = 'none';
-            }
+            
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                try {
+                    // Pide a la base de datos las 5 coincidencias exactas
+                    const res = await fetch(`${API_BASE}?search=${encodeURIComponent(query)}&limit=5&activos=true`);
+                    const data = await res.json();
+                    
+                    if (data.ofertas && data.ofertas.length > 0) {
+                        suggestions.innerHTML = data.ofertas.map(p => `
+                            <div class="suggestion-card" onclick="showProductDetailPage(${JSON.stringify(p).replace(/"/g, '&quot;')}); hideSuggestions()">
+                                <img src="${p.imagen}">
+                                <div class="info">
+                                    <div class="title">${p.nombre}</div>
+                                    <div class="price">${p.precio}</div>
+                                </div>
+                            </div>
+                        `).join('');
+                        suggestions.style.display = 'flex';
+                    } else {
+                        suggestions.style.display = 'none';
+                    }
+                } catch (e) { console.error(e); }
+            }, 300); // 300ms de retraso para no saturar el servidor mientras escribe
         }
 
         function hideSuggestions() {
@@ -3847,21 +3887,18 @@ async function updateStats() {
             if(suggestions) suggestions.style.display = 'none';
         }
 
-        // Cierra las sugerencias si haces clic fuera
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.header-search')) {
-                hideSuggestions();
-            }
-        });
 
-        // ==================== SOBRESCRIBIR RENDER HOT PRODUCTS ====================
+        // =================================================================
+        // --- 3. MÁS VOTADAS (30 productos con mismo diseño) ---
+        // =================================================================
         async function renderHotProducts() {
             showLoading();
             try {
-                const res = await fetch(`${API_BASE}?sort=votes&limit=20&activos=true`);
+                // Pedimos 30 productos ordenados por votos
+                const res = await fetch(`${API_BASE}?sort=votes&limit=30&activos=true`);
                 const data = await res.json();
                 
-                displayedProducts = data.ofertas.map(p => ({
+                const hotProducts = data.ofertas.map(p => ({
                     ...p,
                     precioAntes: p.precio_antes,
                     votosHot: p.votos_calientes || 0,
@@ -3869,16 +3906,23 @@ async function updateStats() {
                     timestamp: p.fecha_creacion
                 }));
                 
-                // Mostrar en el grid
-                document.getElementById('hotProductsGrid').innerHTML = ''; // Limpiamos el viejo
-                document.getElementById('productsGrid').style.display = 'none'; // Ocultamos el principal
+                const hotGrid = document.getElementById('hotProductsGrid');
+                hotGrid.innerHTML = ''; 
                 
-                renderProducts(); // Dibuja los productos
+                // Truco maestro: Engañamos a renderProducts() para que pinte en hotProductsGrid con el mismo diseño exacto
+                const mainGrid = document.getElementById('productsGrid');
+                const tempDisplayed = displayedProducts; 
                 
-                // Movemos los productos al grid de "Mas votadas"
-                const gridHtml = document.getElementById('productsGrid').innerHTML;
-                document.getElementById('hotProductsGrid').innerHTML = gridHtml;
-                document.getElementById('productsGrid').style.display = 'grid'; // Restauramos
+                displayedProducts = hotProducts; // Le damos los 30 productos
+                mainGrid.id = 'tempMainGrid';    // Escondemos el ID del original temporálmente
+                hotGrid.id = 'productsGrid';     // Le ponemos el ID al grid de los hot para que coja los estilos
+                
+                renderProducts();                // Pintamos (Usa todo el CSS y botones de la home)
+                
+                // Restauramos los IDs y los datos a la normalidad
+                hotGrid.id = 'hotProductsGrid';
+                mainGrid.id = 'productsGrid';
+                displayedProducts = tempDisplayed;
                 
             } catch (err) {
                 console.error("Error cargando Más Votadas:", err);
