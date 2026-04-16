@@ -3516,18 +3516,15 @@ async function updateStats() {
 }
 
 
-// Función para compartir solo el enlace limpio (SEO friendly)
-function compartirProducto(idProducto) {
-    // Crea el enlace exacto: https://tusitio.com/producto/1234
+function compartirProducto(idProducto, nombreProducto) {
     const urlCompartir = `${window.location.origin}/producto/${idProducto}`;
 
-    // Si está en móvil, abre el menú nativo compartiendo SOLO la URL
     if (navigator.share) {
         navigator.share({
-            url: urlCompartir
+            title: nombreProducto, // El móvil lee esto para crear la tarjeta interna
+            url: urlCompartir      // Esto es lo único que se pega en WhatsApp
         }).catch((error) => console.log('Error compartiendo:', error));
     } else {
-        // Fallback para PC: Copia solo el enlace
         navigator.clipboard.writeText(urlCompartir).then(() => {
             alert("¡Enlace copiado! Ya puedes pegarlo.");
         });
@@ -3678,8 +3675,8 @@ function compartirProducto(idProducto) {
                     </svg>`;
                 shareBtn.onclick = (e) => {
                     e.stopPropagation(); 
-                    compartirProducto(producto.id); // Ahora solo le pasamos el ID
-                };;
+                    compartirProducto(producto.id, producto.nombre); 
+                };
                 voteSection.appendChild(shareBtn);
                 // ---------------------------------
 
