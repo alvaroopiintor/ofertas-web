@@ -4049,68 +4049,71 @@ function compartirProducto(idProducto, nombreProducto) {
             }
         }
 
-        <div class="mobile-nav">
-             <div class="mobile-nav-item" onclick="window.location.href='/'">
-                 <i class="fas fa-home"></i><span>Inicio</span>
-             </div>
-             <div class="mobile-nav-item" onclick="toggleCategories()">
-                 <i class="fas fa-th-large"></i><span>Categorías</span>
-             </div>
-             <div class="mobile-nav-item center" onclick="toggleSidebar()">
-                 <i class="fas fa-bars"></i>
-             </div>
-             <div class="mobile-nav-item" onclick="window.location.href='/favoritos'">
-                 <i class="fas fa-heart"></i><span>Favoritos</span>
-             </div>
-             <div class="mobile-nav-item" onclick="toggleRightSidebar()">
-                 <i class="fas fa-user"></i><span>Perfil</span>
-             </div>
-         </div>
+        // =================================================================
+        // --- 4. LÓGICA DE LAS BARRAS LATERALES MÓVILES ---
+        // =================================================================
+        function toggleRightSidebar() {
+            const sidebar = document.getElementById('rightSidebar');
+            const content = document.getElementById('profile-content');
+            sidebar.classList.toggle('active');
 
-         <div id="rightSidebar" class="right-sidebar">
-             <div id="profile-content" style="text-align: center;">
-                 </div>
+            // Usamos tu variable global currentUser
+            if (!currentUser) {
+                content.innerHTML = `
+                    <div style="margin-top:40px;">
+                        <i class="fas fa-user-circle" style="font-size: 60px; color: #ccc;"></i>
+                        <h3 style="margin: 15px 0;">Iniciar Sesión</h3>
+                        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Únete para guardar favoritos y votar.</p>
+                        <button onclick="window.location.href='/login'" style="background: var(--primary-color); color: white; border: none; padding: 12px 30px; border-radius: 25px; font-weight: bold; cursor: pointer;">Entrar</button>
+                    </div>
+                `;
+            } else {
+                content.innerHTML = `
+                    <div style="margin-top:40px;">
+                        <div style="width: 60px; height: 60px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 15px auto; font-weight: bold;">
+                            ${currentUser.nombre.charAt(0).toUpperCase()}
+                        </div>
+                        <h3 style="margin-top: 10px;">Hola, ${currentUser.nombre.split(' ')[0]}</h3>
+                        <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color);">
+                        <a href="/ajustes" style="display: flex; align-items: center; gap: 10px; color: var(--text-color); text-decoration: none; padding: 15px; border-radius: 8px; transition: background 0.2s; font-size: 16px;"><i class="fas fa-cog"></i> Ajustes</a>
+                        <div onclick="handleLogout()" style="display: flex; align-items: center; gap: 10px; color: var(--danger-color); padding: 15px; cursor: pointer; border-radius: 8px; transition: background 0.2s; font-size: 16px;">
+                            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Cerramos la sidebar si se pulsa fuera
+        document.addEventListener('click', (e) => {
+            const sidebar = document.getElementById('rightSidebar');
+            if (sidebar && !sidebar.contains(e.target) && !e.target.closest('.mobile-nav-item')) {
+                sidebar.classList.remove('active');
+            }
+        });
+
+    </script> <div class="mobile-nav">
+        <div class="mobile-nav-item" onclick="window.location.href='/'">
+            <i class="fas fa-home"></i><span>Inicio</span>
         </div>
+        <div class="mobile-nav-item" onclick="toggleSidebar()">
+            <i class="fas fa-th-large"></i><span>Categorías</span>
+        </div>
+        <div class="mobile-nav-item center" onclick="toggleSidebar()">
+            <i class="fas fa-search"></i>
+        </div>
+        <div class="mobile-nav-item" onclick="window.location.href='/favoritos'">
+            <i class="fas fa-heart"></i><span>Favoritos</span>
+        </div>
+        <div class="mobile-nav-item" onclick="toggleRightSidebar()">
+            <i class="fas fa-user"></i><span>Perfil</span>
+        </div>
+    </div>
 
-
-       function toggleRightSidebar() {
-           const sidebar = document.getElementById('rightSidebar');
-           const content = document.getElementById('profile-content');
-           sidebar.classList.toggle('active');
-
-           // Comprobamos si el usuario existe (basado en tu lógica de Firebase/Auth)
-           const user = auth.currentUser; // O tu variable global de usuario
-
-           if (!user) {
-               content.innerHTML = `
-                   <div style="margin-top:20px;">
-                       <i class="fas fa-user-circle" style="font-size: 50px; color: #ccc;"></i>
-                       <h3>Iniciar Sesión</h3>
-                       <p>Únete para guardar favoritos y votar.</p>
-                       <button onclick="window.location.href='/login'" class="buy-button">Entrar</button>
-                   </div>
-               `;
-           } else {
-               content.innerHTML = `
-                   <div style="margin-top:20px;">
-                       <i class="fas fa-cog" style="font-size: 30px;"></i>
-                       <h3>Ajustes</h3>
-                       <hr>
-                       <div onclick="logout()" style="margin-top:30px; color: red; cursor:pointer;">
-                           <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-                       </div>
-                   </div>
-               `;
-           }
-       }
-
-// Cerramos la sidebar si se pulsa fuera
-document.addEventListener('click', (e) => {
-    const sidebar = document.getElementById('rightSidebar');
-    if (!sidebar.contains(e.target) && !e.target.closest('.mobile-nav-item')) {
-        sidebar.classList.remove('active');
-    }
-});
+    <div id="rightSidebar" class="right-sidebar">
+        <div id="profile-content" style="text-align: center;">
+            </div>
+    </div>
 
     </script>
 </body>
