@@ -37,12 +37,15 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         :root {
-            --primary-color: #ff6b00;
-            --primary-hover: #e65c00;
+            /* Colores extraídos exactamente de tu nuevo logo */
+            --primary-color: #c41e22; /* El rojo carmesí del eslabón derecho */
+            --primary-hover: #9c171b; /* Un rojo más oscuro para cuando pasas el ratón */
             --secondary-color: #2c3e50;
             --success-color: #27ae60;
             --danger-color: #e74c3c;
-            --warning-color: #f39c12;
+            --warning-color: #f3b519; /* El dorado/amarillo del eslabón izquierdo */
+            
+            /* Fondos y textos base (se mantienen igual) */
             --bg-color: #f5f6f7;
             --card-bg: #ffffff;
             --text-color: #333333;
@@ -137,14 +140,29 @@
         }
         
         .header-logo-text {
-            font-size: 1.6rem;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.8rem; /* Un pelín más grande para compensar las minúsculas */
             font-weight: 800;
-            color: var(--primary-color);
+            color: var(--text-color);
             letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+        
+        .header-logo:hover .header-logo-text {
+            transform: scale(1.02);
         }
         
         .header-logo-text span {
-            color: var(--text-color);
+            /* El degradado que une el rojo y el dorado de tu logo */
+            background: linear-gradient(135deg, #c41e22 0%, #f3b519 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent;
+            margin-left: 1px;
+            font-weight: 900; /* 'Links' un poco más grueso para destacar */
         }
         
         .header-search {
@@ -1846,6 +1864,8 @@
     height: 22px;
 }
 
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,900;1,900&display=swap" rel="stylesheet">
+
 
     </style>
 </head>
@@ -1855,7 +1875,7 @@
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header" style="display: flex; align-items: center; justify-content: space-between; padding: 20px;">
             <a href="#" class="header-logo" onclick="showHome(event); toggleSidebar()">
-                <span class="header-logo-text">SPAIN <span>LINKS</span></span>
+                <span class="header-logo-text">Spain<span>Links</span></span>
             </a>
             <button class="sidebar-close-btn" style="margin-right: 0;" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
         </div>
@@ -1932,7 +1952,7 @@
                 </button>
                 <a href="#" class="header-logo" onclick="showHome(event)">
                     <img src="/static/logo.png" alt="SPAIN LINKS">
-                    <span class="header-logo-text">SPAIN <span>LINKS</span></span>
+                    <span class="header-logo-text">Spain<span>Links</span></span>
                 </a>
             </div>
             
