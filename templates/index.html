@@ -3516,24 +3516,20 @@ async function updateStats() {
 }
 
 
-// Función para compartir el chollo
-function compartirProducto(titulo, precio) {
-    // Escapamos comillas simples por si el título las tiene
-    const tituloLimpio = titulo.replace(/'/g, "");
-    const texto = `🔥 ¡Mira este chollo! ${tituloLimpio} por solo ${precio}€ en SPAIN LINKS.`;
-    const urlCompartir = window.location.origin; // Envía a la web principal
+// Función para compartir solo el enlace limpio (SEO friendly)
+function compartirProducto(idProducto) {
+    // Crea el enlace exacto: https://tusitio.com/producto/1234
+    const urlCompartir = `${window.location.origin}/producto/${idProducto}`;
 
-    // Comprueba si el navegador soporta el menú de compartir nativo (Móviles)
+    // Si está en móvil, abre el menú nativo compartiendo SOLO la URL
     if (navigator.share) {
         navigator.share({
-            title: 'Chollo en SPAIN LINKS',
-            text: texto,
             url: urlCompartir
         }).catch((error) => console.log('Error compartiendo:', error));
     } else {
-        // Fallback para PC: Copia el texto al portapapeles
-        navigator.clipboard.writeText(texto + " " + urlCompartir).then(() => {
-            alert("¡Chollo copiado al portapapeles! Ya puedes pegarlo donde quieras.");
+        // Fallback para PC: Copia solo el enlace
+        navigator.clipboard.writeText(urlCompartir).then(() => {
+            alert("¡Enlace copiado! Ya puedes pegarlo.");
         });
     }
 }
@@ -3681,9 +3677,9 @@ function compartirProducto(titulo, precio) {
                         <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
                     </svg>`;
                 shareBtn.onclick = (e) => {
-                    e.stopPropagation(); // Evita que se abra la página del producto
-                    compartirProducto(producto.nombre, producto.precio);
-                };
+                    e.stopPropagation(); 
+                    compartirProducto(producto.id); // Ahora solo le pasamos el ID
+                };;
                 voteSection.appendChild(shareBtn);
                 // ---------------------------------
 
