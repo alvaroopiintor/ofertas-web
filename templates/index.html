@@ -1679,97 +1679,50 @@
         }
         
 @media (max-width: 768px) {
-    /* 1. CABECERA COMPACTA (Logo + Nombre + Buscador) */
+    /* 1. BARRAS FIJAS (Cabecera y Navegación) */
     header {
-        height: auto !important;
-        padding: 8px !important; /* Margen de ~2mm */
-        flex-direction: column;
-        gap: 8px;
-    }
-    .header-content {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
-    }
-    .header-logo-text { font-size: 1.2rem !important; }
-    .search-container {
-        width: 100% !important;
-        margin: 0 !important;
-    }
-    .search-bar { height: 35px !important; font-size: 14px; }
-
-    /* Ocultar elementos que ahora van en la barra inferior */
-    .nav-buttons, .sidebar-toggle { display: none !important; }
-
-    /* 2. BARRA INFERIOR FIJA */
-    .mobile-nav {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 60px;
-        background: white;
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        border-top: 1px solid #eee;
-        z-index: 2000;
-        padding: 0 8px;
-    }
-    .mobile-nav-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        color: var(--text-muted);
-        font-size: 10px;
-        cursor: pointer;
-    }
-    .mobile-nav-item.center {
-        background: var(--primary-color);
-        color: white;
-        width: 45px;
-        height: 45px;
-        border-radius: 50%;
-        justify-content: center;
-        margin-top: -20px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-
-    /* 3. PUBLICACIONES MÁS CORTAS Y LETRA PEQUEÑA */
-    .product-card {
+        position: fixed !important;
+        top: 0; left: 0; width: 100%;
+        height: 60px !important;
         padding: 8px !important;
-        max-height: 380px; /* Reducción de altura */
+        background: white; z-index: 2000;
+        display: flex !important; flex-direction: row !important;
+        align-items: center; justify-content: space-between;
+        border-bottom: 1px solid #eee;
     }
-    .product-image { height: 140px !important; }
-    .product-title {
-        font-size: 11px !important; /* Letra más pequeña */
-        line-height: 1.2;
-        height: 2.4em;
-        overflow: hidden;
-        margin: 4px 0 !important;
+    main {
+        padding-top: 70px !important;
+        padding-bottom: 70px !important;
     }
-    .price-section { font-size: 13px !important; }
-    
-    /* 4. MODAL DETALLE PRODUCTO (Optimizado) */
-    #productModal .modal-content {
-        padding: 10px !important;
-        text-align: center;
+    .mobile-nav {
+        position: fixed !important;
+        bottom: 0; left: 0; width: 100%;
+        height: 60px !important;
+        background: white; z-index: 2000;
+        border-top: 1px solid #eee; display: flex !important;
     }
-    #modalImage {
-        max-height: 180px !important;
-        margin: 0 auto 10px !important;
-    }
-    .modal-vote-section { /* Votos integrados bajo imagen */
-        display: flex;
-        justify-content: center;
-        gap: 15px;
-        margin-bottom: 10px;
-        transform: scale(0.8);
-    }
-    #modalTitle { font-size: 14px !important; margin: 5px 0; }
-    #modalDescription { font-size: 12px !important; line-height: 1.3; }
 
+    /* 2. PUBLICACIONES MINIATURIZADAS */
+    .product-card {
+        padding: 6px !important; height: 280px !important;
+        display: flex; flex-direction: column;
+    }
+    .product-image { height: 110px !important; object-fit: contain; }
+    .product-title { font-size: 10px !important; height: 2.4em; margin: 2px 0 !important; }
+    .price-section { font-size: 11px !important; margin-top: auto; }
+    .vote-section { transform: scale(0.7); margin: 0 !important; justify-content: center; }
+
+    /* 3. SIDEBAR MÍNIMA (Izquierda) */
+    .sidebar { width: 280px !important; padding: 15px !important; }
+    .sidebar-content { display: flex; flex-direction: column; gap: 20px; }
+    .category-list, .sidebar-footer { display: none !important; }
+
+    /* 4. MODAL DETALLE PRODUCTO */
+    #productModal .modal-content { padding: 10px !important; text-align: center; }
+    #modalImage { width: 100%; max-height: 200px !important; object-fit: contain; margin: 0 auto !important; }
+    #modalTitle { font-size: 13px !important; font-weight: bold; margin: 10px 0; }
+    .modal-price-list { font-size: 11px !important; display: inline-block; }
+    
     /* 5. SIDEBAR DERECHA (Perfil) */
     .right-sidebar {
         position: fixed;
@@ -1793,6 +1746,7 @@
     }
     .deal-card { height: 120px !important; font-size: 10px; }
 }
+
 
         /* ==================== DEBUG, HIDDEN & ANIMATIONS ==================== */
         .debug-console { 
@@ -4092,6 +4046,7 @@ function compartirProducto(idProducto, nombreProducto) {
             }
         });
 
+        
     </script> <div class="mobile-nav">
         <div class="mobile-nav-item" onclick="window.location.href='/'">
             <i class="fas fa-home"></i><span>Inicio</span>
@@ -4115,6 +4070,5 @@ function compartirProducto(idProducto, nombreProducto) {
             </div>
     </div>
 
-    </script>
 </body>
 </html>
