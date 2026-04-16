@@ -1678,89 +1678,121 @@
             .main-layout { grid-template-columns: 1fr; }
         }
         
-        @media (max-width: 768px) {
-            /* 1. CABECERA: Encaje total */
-            .header-main {
-                padding: 8px;
-                gap: 5px;
-                flex-wrap: nowrap; /* Evita que los elementos se amontonen */
-                justify-content: space-between;
-                height: 60px;
-            }
-            .header-left { gap: 5px; flex-shrink: 1; min-width: 0; }
-            .header-logo img { height: 26px; width: auto; }
-            .header-logo-text { font-size: 0.9rem; white-space: nowrap; }
-            
-            /* Buscador compacto al 60% */
-            .header-search { 
-                order: 3; 
-                width: 60%; 
-                position: absolute;
-                top: 60px; /* Lo ponemos debajo de la cabecera principal */
-                left: 5%;
-                z-index: 10;
-            }
-            .search-input { padding: 6px 30px; font-size: 12px; }
+@media (max-width: 768px) {
+    /* 1. CABECERA COMPACTA (Logo + Nombre + Buscador) */
+    header {
+        height: auto !important;
+        padding: 8px !important; /* Margen de ~2mm */
+        flex-direction: column;
+        gap: 8px;
+    }
+    .header-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+    }
+    .header-logo-text { font-size: 1.2rem !important; }
+    .search-container {
+        width: 100% !important;
+        margin: 0 !important;
+    }
+    .search-bar { height: 35px !important; font-size: 14px; }
 
-            /* 2. PRODUCTOS: 2 por línea con PROPORCIÓN REAL */
-            .products-grid {
-                grid-template-columns: repeat(2, 1fr); 
-                gap: 8px;
-                padding: 10px;
-                margin-top: 40px; /* Espacio para el buscador absoluto */
-            }
-            
-            .product-card { height: auto; display: flex; flex-direction: column; }
+    /* Ocultar elementos que ahora van en la barra inferior */
+    .nav-buttons, .sidebar-toggle { display: none !important; }
 
-            .product-card-image { 
-                height: auto;
-                aspect-ratio: 1 / 1; /* Mantiene el cuadrado perfecto, no se estira */
-                padding: 8px;
-            }
-            .product-card h3 { 
-                font-size: 0.7rem; 
-                min-height: 1.8rem; 
-                line-height: 1.1;
-                margin-bottom: 5px;
-            }
-            .product-card .price { font-size: 1rem; }
-            .amazon-btn { padding: 8px; font-size: 9px; margin-top: auto; }
-        }
+    /* 2. BARRA INFERIOR FIJA */
+    .mobile-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 60px;
+        background: white;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        border-top: 1px solid #eee;
+        z-index: 2000;
+        padding: 0 8px;
+    }
+    .mobile-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: var(--text-muted);
+        font-size: 10px;
+        cursor: pointer;
+    }
+    .mobile-nav-item.center {
+        background: var(--primary-color);
+        color: white;
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        justify-content: center;
+        margin-top: -20px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
 
-        /* Bloqueo de desplazamiento horizontal */
-        html, body { max-width: 100%; overflow-x: hidden; position: relative; }
+    /* 3. PUBLICACIONES MÁS CORTAS Y LETRA PEQUEÑA */
+    .product-card {
+        padding: 8px !important;
+        max-height: 380px; /* Reducción de altura */
+    }
+    .product-image { height: 140px !important; }
+    .product-title {
+        font-size: 11px !important; /* Letra más pequeña */
+        line-height: 1.2;
+        height: 2.4em;
+        overflow: hidden;
+        margin: 4px 0 !important;
+    }
+    .price-section { font-size: 13px !important; }
+    
+    /* 4. MODAL DETALLE PRODUCTO (Optimizado) */
+    #productModal .modal-content {
+        padding: 10px !important;
+        text-align: center;
+    }
+    #modalImage {
+        max-height: 180px !important;
+        margin: 0 auto 10px !important;
+    }
+    .modal-vote-section { /* Votos integrados bajo imagen */
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 10px;
+        transform: scale(0.8);
+    }
+    #modalTitle { font-size: 14px !important; margin: 5px 0; }
+    #modalDescription { font-size: 12px !important; line-height: 1.3; }
 
-        /* Estilo del Botón Cuadrado de Ordenar */
-        .sort-dropdown-container { margin: 10px; width: 100%; max-width: 220px; position: relative; }
-        .sort-dropdown-btn {
-            background: var(--card-bg);
-            border: 2px solid var(--border-color);
-            border-radius: 6px;
-            padding: 10px 15px;
-            color: var(--text-color);
-            font-size: 13px;
-            font-weight: 700;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-        }
-        .sort-dropdown-menu {
-            display: none;
-            position: absolute;
-            top: 100%; left: 0; right: 0;
-            background: var(--card-bg);
-            border: 2px solid var(--border-color);
-            border-radius: 6px;
-            z-index: 2000;
-            flex-direction: column;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .sort-dropdown-menu.active { display: flex; }
-        .sort-opt { padding: 10px 15px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border-color); }
-        .sort-opt:hover { background: var(--bg-color); color: var(--primary-color); }
-
+    /* 5. SIDEBAR DERECHA (Perfil) */
+    .right-sidebar {
+        position: fixed;
+        top: 0;
+        right: -300px;
+        width: 260px;
+        height: 100%;
+        background: white;
+        z-index: 3000;
+        transition: right 0.3s ease;
+        padding: 20px;
+        box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+    }
+    .right-sidebar.active { right: 0; }
+    
+    /* 6. OFERTAS DEL DÍA (2 en pantalla) */
+    .daily-deals-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    .deal-card { height: 120px !important; font-size: 10px; }
+}
 
         /* ==================== DEBUG, HIDDEN & ANIMATIONS ==================== */
         .debug-console { 
@@ -4017,7 +4049,68 @@ function compartirProducto(idProducto, nombreProducto) {
             }
         }
 
+        <div class="mobile-nav">
+             <div class="mobile-nav-item" onclick="window.location.href='/'">
+                 <i class="fas fa-home"></i><span>Inicio</span>
+             </div>
+             <div class="mobile-nav-item" onclick="toggleCategories()">
+                 <i class="fas fa-th-large"></i><span>Categorías</span>
+             </div>
+             <div class="mobile-nav-item center" onclick="toggleSidebar()">
+                 <i class="fas fa-bars"></i>
+             </div>
+             <div class="mobile-nav-item" onclick="window.location.href='/favoritos'">
+                 <i class="fas fa-heart"></i><span>Favoritos</span>
+             </div>
+             <div class="mobile-nav-item" onclick="toggleRightSidebar()">
+                 <i class="fas fa-user"></i><span>Perfil</span>
+             </div>
+         </div>
 
+         <div id="rightSidebar" class="right-sidebar">
+             <div id="profile-content" style="text-align: center;">
+                 </div>
+        </div>
+
+
+       function toggleRightSidebar() {
+           const sidebar = document.getElementById('rightSidebar');
+           const content = document.getElementById('profile-content');
+           sidebar.classList.toggle('active');
+
+           // Comprobamos si el usuario existe (basado en tu lógica de Firebase/Auth)
+           const user = auth.currentUser; // O tu variable global de usuario
+
+           if (!user) {
+               content.innerHTML = `
+                   <div style="margin-top:20px;">
+                       <i class="fas fa-user-circle" style="font-size: 50px; color: #ccc;"></i>
+                       <h3>Iniciar Sesión</h3>
+                       <p>Únete para guardar favoritos y votar.</p>
+                       <button onclick="window.location.href='/login'" class="buy-button">Entrar</button>
+                   </div>
+               `;
+           } else {
+               content.innerHTML = `
+                   <div style="margin-top:20px;">
+                       <i class="fas fa-cog" style="font-size: 30px;"></i>
+                       <h3>Ajustes</h3>
+                       <hr>
+                       <div onclick="logout()" style="margin-top:30px; color: red; cursor:pointer;">
+                           <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                       </div>
+                   </div>
+               `;
+           }
+       }
+
+// Cerramos la sidebar si se pulsa fuera
+document.addEventListener('click', (e) => {
+    const sidebar = document.getElementById('rightSidebar');
+    if (!sidebar.contains(e.target) && !e.target.closest('.mobile-nav-item')) {
+        sidebar.classList.remove('active');
+    }
+});
 
     </script>
 </body>
