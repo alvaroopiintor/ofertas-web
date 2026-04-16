@@ -1823,6 +1823,29 @@
         .dropdown-item:hover { background: var(--bg-color); color: var(--primary-color); }
         .dropdown-item.danger:hover { color: var(--danger-color); }
 
+/* Botón de Compartir */
+.share-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    color: #ff6b00; /* Tu color naranja */
+}
+
+.share-btn:hover {
+    background: #fff3e0; /* Naranja muy clarito al pasar el ratón */
+}
+
+.share-btn svg {
+    width: 22px;
+    height: 22px;
+}
+
 
     </style>
 </head>
@@ -3491,6 +3514,29 @@ async function updateStats() {
         console.error("❌ Error cargando estadísticas:", e);
     }
 }
+
+
+// Función para compartir el chollo
+function compartirProducto(titulo, precio) {
+    // Escapamos comillas simples por si el título las tiene
+    const tituloLimpio = titulo.replace(/'/g, "");
+    const texto = `🔥 ¡Mira este chollo! ${tituloLimpio} por solo ${precio}€ en SPAIN LINKS.`;
+    const urlCompartir = window.location.origin; // Envía a la web principal
+
+    // Comprueba si el navegador soporta el menú de compartir nativo (Móviles)
+    if (navigator.share) {
+        navigator.share({
+            title: 'Chollo en SPAIN LINKS',
+            text: texto,
+            url: urlCompartir
+        }).catch((error) => console.log('Error compartiendo:', error));
+    } else {
+        // Fallback para PC: Copia el texto al portapapeles
+        navigator.clipboard.writeText(texto + " " + urlCompartir).then(() => {
+            alert("¡Chollo copiado al portapapeles! Ya puedes pegarlo donde quieras.");
+        });
+    }
+}
         
 
         function renderProducts() {
@@ -3618,6 +3664,29 @@ async function updateStats() {
                 
                 voteSection.appendChild(voteBtnHot);
                 voteSection.appendChild(voteBtnCold);
+                voteSection.appendChild(voteBtnHot);
+                voteSection.appendChild(voteBtnCold);
+                
+                // --- NUEVO: BOTÓN DE COMPARTIR ---
+                const shareBtn = document.createElement('button');
+                shareBtn.className = 'share-btn';
+                shareBtn.title = 'Compartir chollo';
+                shareBtn.style.marginLeft = 'auto'; // Para empujarlo a la derecha del todo
+                shareBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="18" cy="5" r="3"></circle>
+                        <circle cx="6" cy="12" r="3"></circle>
+                        <circle cx="18" cy="19" r="3"></circle>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                    </svg>`;
+                shareBtn.onclick = (e) => {
+                    e.stopPropagation(); // Evita que se abra la página del producto
+                    compartirProducto(producto.nombre, producto.precio);
+                };
+                voteSection.appendChild(shareBtn);
+                // ---------------------------------
+
                 contentDiv.appendChild(voteSection);
                 
                 const timestamp = document.createElement('div');
