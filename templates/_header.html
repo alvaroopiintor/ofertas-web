@@ -1,0 +1,55 @@
+{# ====================================================================
+   HEADER COMPARTIDO
+   Se usa con {% include "_header.html" %} en cualquier página.
+   Variable opcional:
+     show_sidebar_toggle (bool, por defecto true) -> controla si el
+     botón de la izquierda abre el menú lateral (home) o vuelve a la
+     home directamente (páginas sin sidebar, como ajustes).
+   Requiere que la página cargue antes header-common.js (ver comentario
+   en ese archivo).
+==================================================================== #}
+<header>
+    <div class="header-main">
+        <div class="header-left">
+            {% if show_sidebar_toggle is not defined or show_sidebar_toggle %}
+            <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Menú">
+                <i class="fas fa-bars"></i>
+            </button>
+            {% else %}
+            <button class="sidebar-toggle-btn" onclick="window.location.href='/'" title="Volver a la tienda">
+                <i class="fas fa-home"></i>
+            </button>
+            {% endif %}
+            <a href="/" class="header-logo">
+                <img src="/static/logo.png" alt="SPAIN LINKS">
+                <span class="header-logo-text">Spain<span>Links</span></span>
+            </a>
+        </div>
+
+        <div class="header-search">
+            <i class="fas fa-search search-icon"></i>
+            <form class="search-form" onsubmit="event.preventDefault(); handleHeaderSearch();">
+                <input type="text" class="search-input" id="searchInput" placeholder="¿Qué estás buscando?"
+                       oninput="if (typeof liveSearch === 'function') liveSearch(this.value)">
+                <button type="submit" class="search-btn">Buscar</button>
+            </form>
+            <div class="search-suggestions" id="searchSuggestions"></div>
+        </div>
+
+        <div class="header-actions">
+            <div style="position: relative;">
+                <button class="nav-link-btn" id="userMenuBtn" onclick="toggleUserMenu(event)">
+                    <i class="fas fa-user-circle"></i> <span id="userMenuText">Iniciar Sesión</span>
+                </button>
+                <div class="user-dropdown" id="userDropdown">
+                    <a href="/ajustes" class="dropdown-item"><i class="fas fa-cog"></i> Ajustes</a>
+                    <a href="#" onclick="handleLogout()" class="dropdown-item danger"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
+                </div>
+            </div>
+
+            <button class="nav-link-btn" onclick="handleHeaderFavorites(event)">
+                <i class="fas fa-heart" style="color: var(--danger-color);"></i> Mis Favoritos
+            </button>
+        </div>
+    </div>
+</header>
